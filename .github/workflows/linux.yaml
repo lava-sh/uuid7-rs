@@ -16,49 +16,49 @@ jobs:
             # AMD64
             runner: ubuntu-latest,
             target: x86_64,
-            interpreter: "3.10 3.11 3.12 3.13 3.13t 3.14 3.14t pypy3.11",
+            interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "--features mimalloc",
           }
           - {
             # x86 (32-bit)
             runner: ubuntu-latest,
             target: x86,
-            interpreter: "3.10 3.11 3.12 3.13 3.13t 3.14 3.14t pypy3.11",
+            interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "--features mimalloc",
           }
           - {
             # ARM64
             runner: ubuntu-24.04-arm,
             target: aarch64,
-            interpreter: "3.10 3.11 3.12 3.13 3.13t 3.14 3.14t pypy3.11",
+            interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "--features mimalloc",
           }
           - {
             # ARMv7 (32-bit)
             runner: ubuntu-latest,
             target: armv7,
-            interpreter: "3.10 3.11 3.12 3.13 3.13t 3.14 3.14t pypy3.11",
+            interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "",
           }
           - {
             # IBM System z (s390x)
             runner: ubuntu-latest,
             target: s390x,
-            interpreter: "3.10 3.11 3.12 3.13 3.13t 3.14 3.14t pypy3.11",
+            interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "",
           }
           - {
             # PowerPC64 Little Endian
             runner: ubuntu-latest,
             target: ppc64le,
-            interpreter: "3.10 3.11 3.12 3.13 3.13t 3.14 3.14t pypy3.11",
+            interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "",
           }
           - {
             # RISC-V 64-bit
             runner: ubuntu-latest,
             target: riscv64,
-            interpreter: "3.10 3.11 3.12 3.13 3.13t 3.14 3.14t pypy3.11",
+            interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "--features mimalloc",
           }
 
