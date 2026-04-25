@@ -1,0 +1,58 @@
+[build-system]
+requires = ["maturin == 1.13.1"]
+build-backend = "maturin"
+
+[tool.maturin]
+python-source = "py-src"
+module-name = "uuid7_rs._core"
+
+[project]
+name = "uuid7-rs"
+dynamic = ["version"]
+requires-python = ">=3.10"
+description = "..."
+readme = "README.md"
+license = "Unlicense"
+license-files = ["UNLICENSE"]
+authors = [
+    { name = "chirizxc", email = "chirizxc@proton.me" }
+]
+classifiers = [
+    "Typing :: Typed",
+    "Programming Language :: Rust",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Software Development :: Libraries",
+]
+
+[dependency-groups]
+typos = ["typos == 1.45.1"]
+zizmor = ["zizmor == 1.24.1"]
+rumdl = ["rumdl == 0.1.78"]
+maturin = ["maturin == 1.13.1"]
+pytest = ["pytest == 9.0.3"]
+ci = [
+    "ty == 0.0.32",
+    "ruff == 0.15.11",
+    { include-group = "maturin" },
+    { include-group = "pytest" },
+]
+dev = [
+    { include-group = "ci" },
+    { include-group = "typos" },
+    { include-group = "rumdl" },
+    { include-group = "zizmor" },
+]
+bench = []
+
+[project.urls]
+Source = "https://github.com/lava-sh/uuid7-rs"
+Homepage = "https://github.com/lava-sh/uuid7-rs"
+"Bug Tracker" = "https://github.com/lava-sh/uuid7-rs/issues"

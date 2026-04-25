@@ -1,0 +1,63 @@
+target-version = "py310"
+
+line-length = 90
+indent-width = 4
+
+include = [
+    "py-src/**.py",
+    "py-src/**.pyi",
+    "tests/**.py",
+    "pyproject.toml",
+    "README.md",
+]
+
+[lint.isort]
+force-wrap-aliases = true
+combine-as-imports = true
+no-lines-before = ["local-folder"]
+
+[lint]
+preview = true
+
+select = ["ALL"]
+ignore = [
+    "ARG",     # Unused method argument
+    ########
+    "D100",    # Missing docstring in public module
+    "D101",    # Missing docstring in public class
+    "D102",    # Missing docstring in public method
+    "D103",    # Missing docstring in public function
+    "D104",    # Missing docstring in public package
+    "D203",
+    "D212",
+    ########
+    "CPY001",  # Check copyright notices within Python files
+    "S311",    # Force `random` -> `secrets`
+    "ANN401",  # Check `typing.Any`
+    "SIM105",  # Force `try-except-pass` -> `contextlib.suppress`
+    "PLR6301", # Check for the presence of unused self parameter in methods definitions
+    "PTH207",  # Force `glob` -> `Path.glob` or `Path.rglob`
+    ########
+    "TC001",   # \
+    "TC002",   #  ==> `typing.TYPE_CHECKING` block's
+    "TC003",   # /
+    "TC006",   # Add quotes to type expression in `typing.cast()`
+]
+
+[lint.per-file-ignores]
+"py-src/uuid7_rs/__init__.py" = ["RUF067"]
+"py-src/uuid7_rs/compat/__init__.py" = ["RUF067"]
+"py-src/uuid7_rs/_core.pyi" = ["PYI021"]
+# tests
+"tests/**.py" = [
+    "S101",    # Check `assert`
+    "PLR2004", # Check magic values
+    "FURB171", # Check for membership tests against single-item containers
+]
+# benchmark
+"benchmark/**.py" = [
+    "INP001", # Check for packages that are missing an `__init__.py` file
+]
+
+[lint.flake8-tidy-imports.banned-api]
+"contextlib.suppress" = { msg = "Use `try-except-pass` instead" }

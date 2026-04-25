@@ -1,0 +1,63 @@
+name: "tests"
+
+on:
+  workflow_call:
+
+jobs:
+  tests:
+    name: "${{ matrix.os }} / python ${{ matrix.python-version }}"
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [
+          "3.10",
+          "3.11",
+          "3.12",
+          "3.13",
+          "3.14",
+          "pypy3.11",
+        ]
+        os: [
+          "ubuntu-latest",
+          "windows-latest",
+        ]
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: "Install uv"
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: ${{ !startsWith(github.ref, 'refs/tags/') }} # zizmor: ignore[cache-poisoning]
+
+      - name: "Create and activate .venv"
+        shell: bash
+        run: |
+          uv venv .venv --python ${{ matrix.python-version }}
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            echo ".venv/Scripts" >> "$GITHUB_PATH"
+            echo "PYO3_PYTHON=.venv/Scripts/python" >> "$GITHUB_ENV"
+          else
+            echo ".venv/bin" >> "$GITHUB_PATH"
+            echo "PYO3_PYTHON=.venv/bin/python3" >> "$GITHUB_ENV"
+          fi
+
+      - name: "Install dependencies"
+        run: uv pip install --group ci
+
+      - name: "Run maturin"
+        run: maturin build --out wheel --release
+
+      - name: "Install built wheel"
+        shell: bash
+        run: uv pip install wheel/*.whl
+
+      - name: "Run ruff"
+        run: ruff check
+
+      - name: "Run pytest"
+        run: pytest tests/
