@@ -1,0 +1,16 @@
+[global]
+respect-gitignore = true
+include = [
+    "README.md",
+    "benchmark/README.md",
+]
+
+disable = [
+    "MD033",
+    "MD036",
+    "MD041",
+]
+
+[MD013]
+line-length = 100
+code-blocks = false

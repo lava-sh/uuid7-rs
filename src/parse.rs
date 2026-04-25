@@ -1,0 +1,223 @@
+use std::{
+    os::raw::{c_char, c_int, c_void},
+    ptr::{addr_of_mut, copy_nonoverlapping, null_mut, read_unaligned, write_unaligned},
+    slice::from_raw_parts,
+};
+
+use pyo3::ffi::{
+    Py_ASNATIVEBYTES_BIG_ENDIAN, Py_ASNATIVEBYTES_UNSIGNED_BUFFER, Py_DECREF, Py_None, Py_ssize_t,
+    PyBytes_AsStringAndSize, PyErr_Clear, PyErr_ExceptionMatches, PyErr_Format, PyErr_Occurred,
+    PyErr_SetString, PyExc_OverflowError, PyExc_TypeError, PyExc_ValueError, PyList_Check,
+    PyList_GET_ITEM, PyLong_AsNativeBytes, PyLong_AsUnsignedLongLong, PyLong_Check, PyObject,
+    PySequence_Fast, PySequence_Size, PyTuple_GET_ITEM, PyUnicode_AsUTF8AndSize, PyUnicode_Check,
+};
+
+use crate::hex::hex::parse_uuid_hex_str;
+
+#[inline]
+pub fn bytes_to_hilo(bytes: *const u8, hi: &mut u64, lo: &mut u64) {
+    *hi = u64::from_be(unsafe { read_unaligned(bytes.cast::<u64>()) });
+    *lo = u64::from_be(unsafe { read_unaligned(bytes.add(8).cast::<u64>()) });
+}
+
+#[inline]
+pub fn uuid_to_bytes(hi: u64, lo: u64, out: *mut u8) {
+    unsafe {
+        write_unaligned(out.cast::<u64>(), hi.to_be());
+        write_unaligned(out.add(8).cast::<u64>(), lo.to_be());
+    }
+}
+
+pub fn uuid_to_bytes_le(bytes: &[u8; 16], out: &mut [u8; 16]) {
+    out[0] = bytes[3];
+    out[1] = bytes[2];
+    out[2] = bytes[1];
+    out[3] = bytes[0];
+    out[4] = bytes[5];
+    out[5] = bytes[4];
+    out[6] = bytes[7];
+    out[7] = bytes[6];
+    out[8..].copy_from_slice(&bytes[8..]);
+}
+
+#[inline]
+pub fn uuid_to_bytes_le_ptr(src: *const u8, dst: *mut u8) {
+    unsafe {
+        *dst.add(0) = *src.add(3);
+        *dst.add(1) = *src.add(2);
+        *dst.add(2) = *src.add(1);
+        *dst.add(3) = *src.add(0);
+        *dst.add(4) = *src.add(5);
+        *dst.add(5) = *src.add(4);
+        *dst.add(6) = *src.add(7);
+        *dst.add(7) = *src.add(6);
+        copy_nonoverlapping(src.add(8), dst.add(8), 8);
+    }
+}
+
+pub fn parse_uuid_text(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int {
+    unsafe {
+        if PyUnicode_Check(value) == 0 {
+            PyErr_SetString(PyExc_TypeError, c"UUID() argument must be a str".as_ptr());
+            return -1;
+        }
+    }
+    let mut size: Py_ssize_t = 0;
+    let text = unsafe { PyUnicode_AsUTF8AndSize(value, addr_of_mut!(size)) };
+
+    if text.is_null() {
+        return -1;
+    }
+
+    let slice = unsafe { from_raw_parts(text.cast::<u8>(), size.cast_unsigned()) };
+    if parse_uuid_hex_str(slice, hi, lo) != 0 {
+        unsafe {
+            PyErr_SetString(
+                PyExc_ValueError,
+                c"badly formed hexadecimal UUID string".as_ptr(),
+            );
+        }
+        return -1;
+    }
+    0
+}
+
+pub fn parse_uuid_bytes(value: *mut PyObject, le: bool, hi: &mut u64, lo: &mut u64) -> c_int {
+    let mut buf: *mut c_char = null_mut();
+    let mut len: Py_ssize_t = 0;
+    unsafe {
+        if PyBytes_AsStringAndSize(value, addr_of_mut!(buf), addr_of_mut!(len)) != 0 {
+            PyErr_SetString(
+                PyExc_TypeError,
+                c"bytes must be a 16-char bytes object".as_ptr(),
+            );
+            return -1;
+        }
+    }
+    if len != 16 {
+        unsafe {
+            PyErr_SetString(PyExc_ValueError, c"bytes is not a 16-char string".as_ptr());
+        }
+        return -1;
+    }
+    let p = buf as *const u8;
+    if le {
+        let mut reordered = [0u8; 16];
+        uuid_to_bytes_le_ptr(p, reordered.as_mut_ptr());
+        bytes_to_hilo(reordered.as_ptr(), hi, lo);
+    } else {
+        bytes_to_hilo(p, hi, lo);
+    }
+    0
+}
+
+pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int {
+    unsafe {
+        if PyLong_Check(value) == 0 {
+            PyErr_SetString(PyExc_TypeError, c"int must be a 128-bit integer".as_ptr());
+            return -1;
+        }
+    }
+    let mut bytes = [0u8; 16];
+    let nbytes = unsafe {
+        PyLong_AsNativeBytes(
+            value,
+            bytes.as_mut_ptr().cast::<c_void>(),
+            16,
+            Py_ASNATIVEBYTES_BIG_ENDIAN | Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
+        )
+    };
+    if nbytes < 0 {
+        if unsafe { PyErr_ExceptionMatches(PyExc_OverflowError) } != 0 {
+            unsafe {
+                PyErr_SetString(
+                    PyExc_ValueError,
+                    c"int is out of range (need a 128-bit value)".as_ptr(),
+                );
+            };
+        }
+        return -1;
+    }
+    if nbytes > 16 {
+        unsafe {
+            PyErr_SetString(
+                PyExc_ValueError,
+                c"int is out of range (need a 128-bit value)".as_ptr(),
+            );
+        }
+        return -1;
+    }
+    bytes_to_hilo(bytes.as_ptr(), hi, lo);
+    0
+}
+
+pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int {
+    static LIMITS: [u64; 6] = [0xFFFF_FFFF, 0xFFFF, 0xFFFF, 0xFF, 0xFF, 0xFFFF_FFFF_FFFF];
+
+    let fast = unsafe { PySequence_Fast(value, c"fields must be a 6-tuple".as_ptr()) };
+    if fast.is_null() {
+        return -1;
+    }
+    let size = unsafe { PySequence_Size(fast) };
+    if size != 6 {
+        unsafe {
+            Py_DECREF(fast);
+            PyErr_SetString(PyExc_ValueError, c"fields is not a 6-tuple".as_ptr());
+        }
+        return -1;
+    }
+    let mut parts = [0u64; 6];
+
+    for i in 0usize..6 {
+        let item = if unsafe { PyList_Check(fast) } == 1 {
+            unsafe { PyList_GET_ITEM(fast, i.cast_signed()) }
+        } else {
+            unsafe { PyTuple_GET_ITEM(fast, i.cast_signed()) }
+        };
+        let v = unsafe { PyLong_AsUnsignedLongLong(item) };
+        unsafe {
+            if !PyErr_Occurred().is_null() {
+                Py_DECREF(fast);
+                PyErr_Clear();
+                PyErr_SetString(
+                    PyExc_TypeError,
+                    c"fields must contain only integers".as_ptr(),
+                );
+                return -1;
+            }
+        }
+
+        if v > LIMITS[i] {
+            unsafe {
+                Py_DECREF(fast);
+                PyErr_SetString(PyExc_ValueError, c"field value out of range".as_ptr());
+            }
+            return -1;
+        }
+        parts[i] = v;
+    }
+    unsafe { Py_DECREF(fast) };
+    *hi = (parts[0] << 32) | (parts[1] << 16) | parts[2];
+    *lo = (parts[3] << 56) | (parts[4] << 48) | parts[5];
+    0
+}
+
+#[inline]
+pub fn parse_u64_arg(value: *mut PyObject, name: *const c_char) -> (c_int, u64) {
+    if value.is_null() || value == unsafe { Py_None() } {
+        return (0, 0);
+    }
+    let v = unsafe { PyLong_AsUnsignedLongLong(value) };
+    if !unsafe { PyErr_Occurred() }.is_null() {
+        unsafe {
+            PyErr_Clear();
+            PyErr_Format(
+                PyExc_TypeError,
+                c"%s must be a non-negative int or None".as_ptr(),
+                name,
+            );
+        }
+        return (-1, 0);
+    }
+    (1, v)
+}

@@ -1,0 +1,47 @@
+[package]
+name = "uuid7-rs"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "=0.28.3", features = [
+    "extension-module",
+] }
+getrandom = "=0.4.2"
+
+[target."cfg(unix)".dependencies]
+libc = "=0.2.186"
+
+[dependencies.mimalloc]
+optional = true
+version = "=0.1.50"
+features = [
+    "override",
+    "local_dynamic_tls",
+]
+
+[features]
+default = []
+mimalloc = ["dep:mimalloc"]
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+panic = "abort"
+strip = "symbols"
+codegen-units = 1
+
+[lints]
+rust.warnings = { level = "deny" }
+clippy.perf = { level = "deny", priority = -1 }
+clippy.style = { level = "warn", priority = -1 }
+clippy.pedantic = { level = "warn", priority = -1 }
+
+clippy.too_many_lines = "allow"
+clippy.manual_let_else = "allow"
+clippy.cast_possible_truncation = "allow"
+
