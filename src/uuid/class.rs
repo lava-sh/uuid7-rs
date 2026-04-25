@@ -1,3 +1,5 @@
+#[cfg(not(Py_3_13))]
+use std::os::raw::c_uchar;
 use std::{
     ffi::CStr,
     os::raw::{c_int, c_uint, c_void},
@@ -5,17 +7,22 @@ use std::{
     ptr::addr_of_mut,
 };
 
+#[cfg(not(Py_3_13))]
+use pyo3::ffi::_PyLong_FromByteArray;
+#[cfg(Py_3_13)]
+use pyo3::ffi::{
+    Py_ASNATIVEBYTES_BIG_ENDIAN, Py_ASNATIVEBYTES_UNSIGNED_BUFFER, PyLong_FromUnsignedNativeBytes,
+};
 use pyo3::{
     PyErr, PyResult, Python,
     ffi::{
-        METH_NOARGS, METH_O, Py_ASNATIVEBYTES_BIG_ENDIAN, Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
-        Py_INCREF, Py_None, Py_REFCNT, Py_TPFLAGS_DEFAULT, Py_nb_int, Py_ssize_t, Py_tp_dealloc,
-        Py_tp_free, Py_tp_getset, Py_tp_hash, Py_tp_methods, Py_tp_new, Py_tp_repr,
-        Py_tp_richcompare, Py_tp_str, PyDict_Next, PyErr_Format, PyErr_SetString, PyExc_TypeError,
-        PyGetSetDef, PyLong_FromUnsignedNativeBytes, PyMethodDef, PyMethodDefPointer,
-        PyModule_AddObjectRef, PyObject, PyObject_Free, PyObject_New, PyObject_TypeCheck,
-        PyTuple_GET_ITEM, PyTuple_GET_SIZE, PyType_FromSpec, PyType_Slot, PyType_Spec,
-        PyTypeObject, PyUnicode_CompareWithASCIIString,
+        METH_NOARGS, METH_O, Py_INCREF, Py_None, Py_REFCNT, Py_TPFLAGS_DEFAULT, Py_nb_int,
+        Py_ssize_t, Py_tp_dealloc, Py_tp_free, Py_tp_getset, Py_tp_hash, Py_tp_methods, Py_tp_new,
+        Py_tp_repr, Py_tp_richcompare, Py_tp_str, PyDict_Next, PyErr_Format, PyErr_SetString,
+        PyExc_TypeError, PyGetSetDef, PyMethodDef, PyMethodDefPointer, PyModule_AddObjectRef,
+        PyObject, PyObject_Free, PyObject_New, PyObject_TypeCheck, PyTuple_GET_ITEM,
+        PyTuple_GET_SIZE, PyType_FromSpec, PyType_Slot, PyType_Spec, PyTypeObject,
+        PyUnicode_CompareWithASCIIString,
     },
 };
 
@@ -99,11 +106,18 @@ pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
     let mut bytes = [0u8; 16];
     unsafe {
         uuid_to_bytes(hi, lo, bytes.as_mut_ptr());
-        PyLong_FromUnsignedNativeBytes(
-            bytes.as_ptr().cast::<c_void>(),
-            16,
-            Py_ASNATIVEBYTES_BIG_ENDIAN | Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
-        )
+        #[cfg(Py_3_13)]
+        {
+            PyLong_FromUnsignedNativeBytes(
+                bytes.as_ptr().cast::<c_void>(),
+                16,
+                Py_ASNATIVEBYTES_BIG_ENDIAN | Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
+            )
+        }
+        #[cfg(not(Py_3_13))]
+        {
+            _PyLong_FromByteArray(bytes.as_ptr().cast::<c_uchar>(), 16, 0, 0)
+        }
     }
 }
 

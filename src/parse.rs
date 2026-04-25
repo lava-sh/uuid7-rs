@@ -1,15 +1,25 @@
+#[cfg(not(Py_3_13))]
+use std::os::raw::c_uchar;
+#[cfg(Py_3_13)]
+use std::os::raw::c_void;
 use std::{
-    os::raw::{c_char, c_int, c_void},
+    os::raw::{c_char, c_int},
     ptr::{addr_of_mut, copy_nonoverlapping, null_mut, read_unaligned, write_unaligned},
     slice::from_raw_parts,
 };
 
+#[cfg(not(Py_3_13))]
+use pyo3::ffi::{_PyLong_AsByteArray, PyLongObject};
+#[cfg(Py_3_13)]
 use pyo3::ffi::{
-    Py_ASNATIVEBYTES_BIG_ENDIAN, Py_ASNATIVEBYTES_UNSIGNED_BUFFER, Py_DECREF, Py_None, Py_ssize_t,
-    PyBytes_AsStringAndSize, PyErr_Clear, PyErr_ExceptionMatches, PyErr_Format, PyErr_Occurred,
-    PyErr_SetString, PyExc_OverflowError, PyExc_TypeError, PyExc_ValueError, PyList_Check,
-    PyList_GET_ITEM, PyLong_AsNativeBytes, PyLong_AsUnsignedLongLong, PyLong_Check, PyObject,
-    PySequence_Fast, PySequence_Size, PyTuple_GET_ITEM, PyUnicode_AsUTF8AndSize, PyUnicode_Check,
+    Py_ASNATIVEBYTES_BIG_ENDIAN, Py_ASNATIVEBYTES_UNSIGNED_BUFFER, PyLong_AsNativeBytes,
+};
+use pyo3::ffi::{
+    Py_DECREF, Py_None, Py_ssize_t, PyBytes_AsStringAndSize, PyErr_Clear, PyErr_ExceptionMatches,
+    PyErr_Format, PyErr_Occurred, PyErr_SetString, PyExc_OverflowError, PyExc_TypeError,
+    PyExc_ValueError, PyList_Check, PyList_GET_ITEM, PyLong_AsUnsignedLongLong, PyLong_Check,
+    PyObject, PySequence_Fast, PySequence_Size, PyTuple_GET_ITEM, PyUnicode_AsUTF8AndSize,
+    PyUnicode_Check,
 };
 
 use crate::hex::hex::parse_uuid_hex_str;
@@ -119,7 +129,8 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         }
     }
     let mut bytes = [0u8; 16];
-    let nbytes = unsafe {
+    #[cfg(Py_3_13)]
+    let rc = unsafe {
         PyLong_AsNativeBytes(
             value,
             bytes.as_mut_ptr().cast::<c_void>(),
@@ -127,7 +138,17 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
             Py_ASNATIVEBYTES_BIG_ENDIAN | Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
         )
     };
-    if nbytes < 0 {
+    #[cfg(not(Py_3_13))]
+    let rc = unsafe {
+        _PyLong_AsByteArray(
+            value.cast::<PyLongObject>(),
+            bytes.as_mut_ptr().cast::<c_uchar>(),
+            16,
+            0,
+            0,
+        )
+    };
+    if rc < 0 {
         if unsafe { PyErr_ExceptionMatches(PyExc_OverflowError) } != 0 {
             unsafe {
                 PyErr_SetString(
@@ -138,7 +159,8 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         }
         return -1;
     }
-    if nbytes > 16 {
+    #[cfg(Py_3_13)]
+    if rc > 16 {
         unsafe {
             PyErr_SetString(
                 PyExc_ValueError,
