@@ -4,29 +4,20 @@ __all__ = (
     "uuid7",
 )
 
-import sys
-from typing import Literal
-from uuid import UUID
+from typing import Final, Literal
+from uuid import UUID, SafeUUID
 
 from uuid7_rs._core import _uuid7
 
-if sys.version_info >= (3, 14):
-    from uuid import MAX, NIL
+NIL: Final[UUID] = UUID("00000000-0000-0000-0000-000000000000")
+MAX: Final[UUID] = UUID("ffffffff-ffff-ffff-ffff-ffffffffffff")
 
-    def from_int(value: int) -> UUID:
-        return UUID._from_int(value)  # noqa: SLF001
 
-else:
-    from uuid import SafeUUID
-
-    MAX = UUID("ffffffff-ffff-ffff-ffff-ffffffffffff")
-    NIL = UUID("00000000-0000-0000-0000-000000000000")
-
-    def from_int(value: int) -> UUID:
-        obj = object.__new__(UUID)
-        object.__setattr__(obj, "int", value)  # noqa: PLC2801
-        object.__setattr__(obj, "is_safe", SafeUUID.unknown)  # noqa: PLC2801
-        return obj
+def from_int(int_: int) -> UUID:
+    obj = object.__new__(UUID)
+    object.__setattr__(obj, "int", int_)  # noqa: PLC2801
+    object.__setattr__(obj, "is_safe", SafeUUID.unknown)  # noqa: PLC2801
+    return obj
 
 
 def uuid7(

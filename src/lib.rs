@@ -68,6 +68,7 @@ mod _core {
                 if func.is_null() {
                     return Err(PyErr::fetch(module.py()));
                 }
+
                 if PyModule_AddObjectRef(m, c"_uuid7".as_ptr(), func) < 0 {
                     Py_DECREF(func);
                     return Err(PyErr::fetch(module.py()));

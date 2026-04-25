@@ -16,7 +16,7 @@ Python:
 
 Rust:
 
-![Unsafe code](https://img.shields.io/badge/Unsafe%20count-138-brown?style=flat-square&logo=rust&logoColor=white)
+![Unsafe code](https://img.shields.io/badge/Unsafe%20count-158-brown?style=flat-square&logo=rust&logoColor=white)
 
 ## Features
 

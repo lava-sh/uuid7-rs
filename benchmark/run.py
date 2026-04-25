@@ -10,16 +10,14 @@ from pathlib import Path
 from typing import TypeAlias
 
 import altair as alt
-import uuid7_rs
-import uuid7_rs.compat as uuid7_rs_compat
 import c_uuid_v7
-import c_uuid_v7.compat as c_uuid_v7_compat
 import cpuinfo
 import fastuuid
 import lastuuid
 import polars as pl
 import uuid6
 import uuid7 as uuid7gen
+import uuid7_rs
 import uuid_utils
 import uuid_utils.compat as uuid_utils_compat
 from uuid_v7.base import uuid7 as uuid_v7_uuid7
@@ -144,7 +142,7 @@ def run(run_count: int) -> None:
     cases = {
         "uuid": (uuid.uuid7, "uuid"),
         "c_uuid_v7": (c_uuid_v7.uuid7, "c_uuid_v7"),
-        "uuid7_rs": (uuid7_rs.uuid7, "c_uuid_v7"),
+        "uuid7_rs": (uuid7_rs.uuid7, "uuid7_rs"),
         "uuid_utils": (uuid_utils.uuid7, "uuid-utils"),
         "fastuuid": (fastuuid.uuid7, "fastuuid"),
         "uuid_v7": (uuid_v7_uuid7, "uuid-v7"),
@@ -154,8 +152,8 @@ def run(run_count: int) -> None:
     }
 
     compact_cases = {
-        "c_uuid_v7.compat": (c_uuid_v7_compat.uuid7, "c_uuid_v7"),
-        "uuid7_rs.compat": (uuid7_rs_compat.uuid7, "c_uuid_v7"),
+        "c_uuid_v7.compat": (c_uuid_v7.compat.uuid7, "c_uuid_v7"),
+        "uuid7_rs.compat": (uuid7_rs.compat.uuid7, "uuid7_rs"),
         "uuid_utils.compat": (uuid_utils_compat.uuid7, "uuid-utils"),
         "uuid_v7": (uuid_v7_uuid7, "uuid-v7"),
         "uuid6": (uuid6.uuid7, "uuid6"),

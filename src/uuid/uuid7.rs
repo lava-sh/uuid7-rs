@@ -7,7 +7,7 @@ use pyo3::ffi::{
 #[cfg(not(PyPy))]
 use pyo3::ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE};
 #[cfg(PyPy)]
-use pyo3::ffi::{PyTuple_GetItem, PyTuple_Size};
+use pyo3::ffi::{PyTuple_GetItem as PyTuple_GET_ITEM, PyTuple_Size as PyTuple_GET_SIZE};
 
 use crate::{
     parse::parse_u64_arg,
@@ -29,14 +29,7 @@ pub extern "C" fn uuid7(
     let nkw = if kwnames.is_null() {
         0
     } else {
-        #[cfg(not(PyPy))]
-        {
-            unsafe { PyTuple_GET_SIZE(kwnames) }
-        }
-        #[cfg(PyPy)]
-        {
-            unsafe { PyTuple_Size(kwnames) }
-        }
+        unsafe { PyTuple_GET_SIZE(kwnames) }
     };
 
     if nargs == 0 && nkw == 0 {
@@ -81,10 +74,7 @@ pub extern "C" fn uuid7(
     }
 
     for i in 0..nkw {
-        #[cfg(not(PyPy))]
         let k = unsafe { PyTuple_GET_ITEM(kwnames, i) };
-        #[cfg(PyPy)]
-        let k = unsafe { PyTuple_GetItem(kwnames, i) };
         let v = unsafe { *args.offset(nargs + i) };
 
         match () {

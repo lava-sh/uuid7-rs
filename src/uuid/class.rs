@@ -9,14 +9,16 @@ use std::{
 
 #[cfg(not(Py_3_13))]
 use pyo3::ffi::_PyLong_FromByteArray;
-#[cfg(Py_3_13)]
+#[cfg(all(Py_3_14, not(PyPy)))]
+use pyo3::ffi::Py_ssize_t as LongSsize;
+#[cfg(all(Py_3_13, not(all(Py_3_14, not(PyPy)))))]
 use pyo3::ffi::{
     Py_ASNATIVEBYTES_BIG_ENDIAN, Py_ASNATIVEBYTES_UNSIGNED_BUFFER, PyLong_FromUnsignedNativeBytes,
 };
 #[cfg(not(PyPy))]
 use pyo3::ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE};
 #[cfg(PyPy)]
-use pyo3::ffi::{PyTuple_GetItem, PyTuple_Size};
+use pyo3::ffi::{PyTuple_GetItem as PyTuple_GET_ITEM, PyTuple_Size as PyTuple_GET_SIZE};
 use pyo3::{
     PyErr, PyResult, Python,
     ffi::{
@@ -29,8 +31,10 @@ use pyo3::{
     },
 };
 
+#[cfg(not(all(Py_3_14, not(PyPy))))]
+use crate::parse::uuid_to_bytes;
 use crate::{
-    parse::{parse_uuid_bytes, parse_uuid_fields, parse_uuid_int, parse_uuid_text, uuid_to_bytes},
+    parse::{parse_uuid_bytes, parse_uuid_fields, parse_uuid_int, parse_uuid_text},
     uuid::{
         dunder::{__copy__, __hash__, __repr__, __str__, richcompare},
         property::{
@@ -40,6 +44,22 @@ use crate::{
         uuid_obj::UUIDObject,
     },
 };
+
+#[cfg(all(Py_3_14, not(PyPy)))]
+unsafe extern "C" {
+    fn PyLongWriter_Create(
+        negative: c_int,
+        ndigits: LongSsize,
+        digits: *mut *mut c_void,
+    ) -> *mut PyLongWriter;
+    fn PyLongWriter_Finish(writer: *mut PyLongWriter) -> *mut PyObject;
+}
+
+#[cfg(all(Py_3_14, not(PyPy)))]
+#[repr(C)]
+struct PyLongWriter {
+    _opaque: [u8; 0],
+}
 
 pub static mut UUID_PTR: *mut PyTypeObject = ptr::null_mut();
 static mut UUID_CACHE: *mut UUIDObject = ptr::null_mut();
@@ -105,22 +125,46 @@ pub extern "C" fn uuid_nb_int(self_: *mut PyObject) -> *mut PyObject {
     }
 }
 
+#[cfg(all(Py_3_14, not(PyPy)))]
+pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
+    const SHIFT: u32 = 30;
+    const MASK: u64 = (1 << SHIFT) - 1;
+
+    let mut digits_ptr: *mut c_void = ptr::null_mut();
+    let writer = unsafe { PyLongWriter_Create(0, 5, addr_of_mut!(digits_ptr)) };
+    if writer.is_null() {
+        return ptr::null_mut();
+    }
+    let d = digits_ptr.cast::<u32>();
+    unsafe {
+        d.write((lo & MASK) as u32); // bits 0..29
+        d.add(1).write(((lo >> 30) & MASK) as u32); // bits 30..59
+        d.add(2).write((((lo >> 60) | (hi << 4)) & MASK) as u32); // bits 60..89
+        d.add(3).write(((hi >> 26) & MASK) as u32); // bits 90..119
+        d.add(4).write((hi >> 56) as u32); // bits 120..127
+        PyLongWriter_Finish(writer)
+    }
+}
+
+#[cfg(all(Py_3_13, not(all(Py_3_14, not(PyPy)))))]
 pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
     let mut bytes = [0u8; 16];
     unsafe {
         uuid_to_bytes(hi, lo, bytes.as_mut_ptr());
-        #[cfg(Py_3_13)]
-        {
-            PyLong_FromUnsignedNativeBytes(
-                bytes.as_ptr().cast::<c_void>(),
-                16,
-                Py_ASNATIVEBYTES_BIG_ENDIAN | Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
-            )
-        }
-        #[cfg(not(Py_3_13))]
-        {
-            _PyLong_FromByteArray(bytes.as_ptr().cast::<c_uchar>(), 16, 0, 0)
-        }
+        PyLong_FromUnsignedNativeBytes(
+            bytes.as_ptr().cast::<c_void>(),
+            16,
+            Py_ASNATIVEBYTES_BIG_ENDIAN | Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
+        )
+    }
+}
+
+#[cfg(not(Py_3_13))]
+pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
+    let mut bytes = [0u8; 16];
+    unsafe {
+        uuid_to_bytes(hi, lo, bytes.as_mut_ptr());
+        _PyLong_FromByteArray(bytes.as_ptr().cast::<c_uchar>(), 16, 0, 0)
     }
 }
 
@@ -133,10 +177,7 @@ pub extern "C" fn uuid_type_new(
         return unsafe { (*tp).tp_alloc.unwrap()(tp, 0) };
     }
 
-    #[cfg(not(PyPy))]
     let nargs = unsafe { PyTuple_GET_SIZE(args) };
-    #[cfg(PyPy)]
-    let nargs = unsafe { PyTuple_Size(args) };
 
     if nargs > 1 {
         unsafe {
@@ -151,14 +192,7 @@ pub extern "C" fn uuid_type_new(
     let none = unsafe { Py_None() };
 
     let mut hex_obj = if nargs == 1 {
-        #[cfg(not(PyPy))]
-        {
-            unsafe { PyTuple_GET_ITEM(args, 0) }
-        }
-        #[cfg(PyPy)]
-        {
-            unsafe { PyTuple_GetItem(args, 0) }
-        }
+        unsafe { PyTuple_GET_ITEM(args, 0) }
     } else {
         none
     };
