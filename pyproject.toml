@@ -42,6 +42,7 @@ ci = [
     "ty == 0.0.32",
     "ruff == 0.15.11",
     { include-group = "maturin" },
+    { include-group = "pytest" },
 ]
 dev = [
     { include-group = "ci" },
