@@ -8,8 +8,8 @@ import uuid
 from collections.abc import Callable
 from typing import Any, Literal, cast
 
-import uuid7_rs
 import pytest
+import uuid7_rs
 
 Mode = Literal["fast", "secure"]
 V7_MAX_TIMESTAMP_MS = 0xFFFFFFFFFFFF
