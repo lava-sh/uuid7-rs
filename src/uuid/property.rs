@@ -147,5 +147,5 @@ pub extern "C" fn get_clock_seq(self_: *mut PyObject, _: *mut c_void) -> *mut Py
     let obj = unsafe { &*(self_ as *const UUIDObject) };
     let hi = ((obj.lo >> 56) & 0x3F) as u32;
     let lo = ((obj.lo >> 48) & 0xFF) as u32;
-    unsafe { PyLong_FromUnsignedLong(((hi << 8) | lo) as c_ulong) }
+    unsafe { PyLong_FromUnsignedLong(c_ulong::from((hi << 8) | lo)) }
 }
