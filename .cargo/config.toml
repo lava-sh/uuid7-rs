@@ -2,7 +2,3 @@
 fmt-nightly = [
     "fmt", "--all", "--", "--config-path", ".rustfmt.nightly.toml",
 ]
-
-[env]
-VIRTUAL_ENV = "C:/Users/chiri/Desktop/Rust/xxx/.venv/Scripts/python.exe"
-PYO3_PYTHON = "C:/Users/chiri/Desktop/Rust/xxx/.venv/Scripts/python.exe"
