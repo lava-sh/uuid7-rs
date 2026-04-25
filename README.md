@@ -6,11 +6,11 @@
 
 </div>
 
-[![PyPI License](https://img.shields.io/pypi/l/uuid7_rs.svg?style=flat-square)](https://pypi.org/project/uuid7_rs)
-[![Monthly downloads](https://img.shields.io/pypi/dm/uuid7_rs.svg?style=flat-square)](https://pypi.org/project/uuid7_rs)
+[![PyPI License](https://img.shields.io/pypi/l/uuid7-rs.svg?style=flat-square)](https://pypi.org/project/uuid7-rs)
+[![Monthly downloads](https://img.shields.io/pypi/dm/uuid7-rs.svg?style=flat-square)](https://pypi.org/project/uuid7-rs)
 [![Github Repository size](https://img.shields.io/github/repo-size/lava-sh/uuid7-rs?style=flat-square)](https://github.com/lava-sh/uuid7-rs)
-[![Python version](https://img.shields.io/pypi/pyversions/uuid7_rs.svg?style=flat-square)](https://pypi.org/project/uuid7_rs)
-[![Implementation](https://img.shields.io/pypi/implementation/uuid7_rs.svg?style=flat-square)](https://pypi.org/project/uuid7_rs)
+[![Python version](https://img.shields.io/pypi/pyversions/uuid7-rs.svg?style=flat-square)](https://pypi.org/project/uuid7-rs)
+[![Implementation](https://img.shields.io/pypi/implementation/uuid7-rs.svg?style=flat-square)](https://pypi.org/project/uuid7-rs)
 
 ## Features
 
