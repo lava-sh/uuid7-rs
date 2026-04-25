@@ -10,7 +10,7 @@ use pyo3::ffi::{
 #[cfg(not(PyPy))]
 use pyo3::ffi::{PyTuple_SET_ITEM, PyUnicode_1BYTE_DATA, PyUnicode_New};
 #[cfg(PyPy)]
-use pyo3::ffi::{PyTuple_SetItem, PyUnicode_FromStringAndSize};
+use pyo3::ffi::{PyTuple_SetItem as PyTuple_SET_ITEM, PyUnicode_FromStringAndSize};
 
 use crate::{
     hex::hex::{fmt_dashed, fmt_hex32},
@@ -122,74 +122,32 @@ pub extern "C" fn fields(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject 
         return ptr::null_mut();
     }
     unsafe {
-        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
             py_tuple,
             0,
             PyLong_FromUnsignedLong((obj.hi >> 32) as c_ulong),
         );
-        #[cfg(PyPy)]
-        PyTuple_SetItem(
-            py_tuple,
-            0,
-            PyLong_FromUnsignedLong((obj.hi >> 32) as c_ulong),
-        );
-        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
             py_tuple,
             1,
             PyLong_FromUnsignedLong(((obj.hi >> 16) & 0xFFFF) as c_ulong),
         );
-        #[cfg(PyPy)]
-        PyTuple_SetItem(
-            py_tuple,
-            1,
-            PyLong_FromUnsignedLong(((obj.hi >> 16) & 0xFFFF) as c_ulong),
-        );
-        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
             py_tuple,
             2,
             PyLong_FromUnsignedLong((obj.hi & 0xFFFF) as c_ulong),
         );
-        #[cfg(PyPy)]
-        PyTuple_SetItem(
-            py_tuple,
-            2,
-            PyLong_FromUnsignedLong((obj.hi & 0xFFFF) as c_ulong),
-        );
-        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
             py_tuple,
             3,
             PyLong_FromUnsignedLong((obj.lo >> 56) as c_ulong),
         );
-        #[cfg(PyPy)]
-        PyTuple_SetItem(
-            py_tuple,
-            3,
-            PyLong_FromUnsignedLong((obj.lo >> 56) as c_ulong),
-        );
-        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
             py_tuple,
             4,
             PyLong_FromUnsignedLong(((obj.lo >> 48) & 0xFF) as c_ulong),
         );
-        #[cfg(PyPy)]
-        PyTuple_SetItem(
-            py_tuple,
-            4,
-            PyLong_FromUnsignedLong(((obj.lo >> 48) & 0xFF) as c_ulong),
-        );
-        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
-            py_tuple,
-            5,
-            PyLong_FromUnsignedLongLong(obj.lo & 0xFFFF_FFFF_FFFF),
-        );
-        #[cfg(PyPy)]
-        PyTuple_SetItem(
             py_tuple,
             5,
             PyLong_FromUnsignedLongLong(obj.lo & 0xFFFF_FFFF_FFFF),
