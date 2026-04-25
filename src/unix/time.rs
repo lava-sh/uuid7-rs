@@ -1,5 +1,3 @@
-use std::ptr::addr_of_mut;
-
 #[inline]
 pub fn now_ms() -> u64 {
     let mut ts = libc::timespec {
@@ -7,7 +5,14 @@ pub fn now_ms() -> u64 {
         tv_nsec: 0,
     };
     unsafe {
-        libc::clock_gettime(libc::CLOCK_REALTIME, addr_of_mut!(ts));
+        libc::clock_gettime(libc::CLOCK_REALTIME, std::ptr::addr_of_mut!(ts));
     }
-    (ts.tv_sec.cast_unsigned() * 1000) + (ts.tv_nsec.cast_unsigned() / 1_000_000)
+    #[cfg(target_pointer_width = "64")]
+    {
+        (ts.tv_sec.cast_unsigned() * 1000) + (ts.tv_nsec.cast_unsigned() / 1_000_000)
+    }
+    #[cfg(target_pointer_width = "32")]
+    {
+        (ts.tv_sec.cast_unsigned() as u64 * 1000) + (ts.tv_nsec.cast_unsigned() as u64 / 1_000_000)
+    }
 }
