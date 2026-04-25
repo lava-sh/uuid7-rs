@@ -149,7 +149,7 @@ pub fn build_uuid7_default(hi: &mut u64, lo: &mut u64) -> c_int {
         return -1;
     }
     let (mut ts, mut ra, mut t62) = (0u64, 0u16, 0u64);
-    let _ = advance_monotonic_with(now_ms(), &mut ts, &mut ra, &mut t62, || Ok(w1rand()));
+    advance_monotonic_with(now_ms(), &mut ts, &mut ra, &mut t62, || Ok(w1rand()));
     let (h, l) = build_words(ts, ra, t62);
     *hi = h;
     *lo = l;
@@ -222,7 +222,7 @@ pub fn build_uuid7_with_args(
 
     let (h, l) = if state > 0 {
         let mut ms = ts_ms;
-        let _ = advance_monotonic_with(ms, &mut ms, &mut ra, &mut t62, || Ok(w1rand()));
+        advance_monotonic_with(ms, &mut ms, &mut ra, &mut t62, || Ok(w1rand()));
         build_words(ms, ra, t62)
     } else {
         build_words(ts_ms, ra, t62)
