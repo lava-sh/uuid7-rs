@@ -2,9 +2,12 @@ use std::ptr;
 
 use pyo3::ffi::{
     Py_None, Py_ssize_t, PyErr_Format, PyErr_SetString, PyExc_TypeError, PyExc_ValueError,
-    PyObject, PyTuple_GET_ITEM, PyTuple_GET_SIZE, PyUnicode_Check,
-    PyUnicode_CompareWithASCIIString,
+    PyObject, PyUnicode_Check, PyUnicode_CompareWithASCIIString,
 };
+#[cfg(not(PyPy))]
+use pyo3::ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE};
+#[cfg(PyPy)]
+use pyo3::ffi::{PyTuple_GetItem, PyTuple_Size};
 
 use crate::{
     parse::parse_u64_arg,
@@ -26,7 +29,14 @@ pub extern "C" fn uuid7(
     let nkw = if kwnames.is_null() {
         0
     } else {
-        unsafe { PyTuple_GET_SIZE(kwnames) }
+        #[cfg(not(PyPy))]
+        {
+            unsafe { PyTuple_GET_SIZE(kwnames) }
+        }
+        #[cfg(PyPy)]
+        {
+            unsafe { PyTuple_Size(kwnames) }
+        }
     };
 
     if nargs == 0 && nkw == 0 {
@@ -71,7 +81,10 @@ pub extern "C" fn uuid7(
     }
 
     for i in 0..nkw {
+        #[cfg(not(PyPy))]
         let k = unsafe { PyTuple_GET_ITEM(kwnames, i) };
+        #[cfg(PyPy)]
+        let k = unsafe { PyTuple_GetItem(kwnames, i) };
         let v = unsafe { *args.offset(nargs + i) };
 
         match () {

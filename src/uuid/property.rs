@@ -5,8 +5,12 @@ use std::{
 
 use pyo3::ffi::{
     Py_ssize_t, PyBytes_FromStringAndSize, PyLong_FromUnsignedLong, PyLong_FromUnsignedLongLong,
-    PyObject, PyTuple_New, PyTuple_SET_ITEM, PyUnicode_1BYTE_DATA, PyUnicode_New,
+    PyObject, PyTuple_New,
 };
+#[cfg(not(PyPy))]
+use pyo3::ffi::{PyTuple_SET_ITEM, PyUnicode_1BYTE_DATA, PyUnicode_New};
+#[cfg(PyPy)]
+use pyo3::ffi::{PyTuple_SetItem, PyUnicode_FromStringAndSize};
 
 use crate::{
     hex::hex::{fmt_dashed, fmt_hex32},
@@ -51,17 +55,26 @@ u32_getter!(version, |obj: &UUIDObject| (obj.hi >> 12) & 0xF);
 
 #[inline]
 pub fn with_buf(len: Py_ssize_t, f: impl FnOnce(&mut [u8])) -> *mut PyObject {
-    let py_str = unsafe { PyUnicode_New(len, 127) };
-    if py_str.is_null() {
-        return ptr::null_mut();
+    #[cfg(not(PyPy))]
+    {
+        let py_str = unsafe { PyUnicode_New(len, 127) };
+        if py_str.is_null() {
+            return ptr::null_mut();
+        }
+
+        let buf = unsafe {
+            std::slice::from_raw_parts_mut(PyUnicode_1BYTE_DATA(py_str), len.cast_unsigned())
+        };
+
+        f(buf);
+        py_str
     }
-
-    let buf = unsafe {
-        std::slice::from_raw_parts_mut(PyUnicode_1BYTE_DATA(py_str), len.cast_unsigned())
-    };
-
-    f(buf);
-    py_str
+    #[cfg(PyPy)]
+    {
+        let mut buf = vec![0u8; len.cast_unsigned()];
+        f(&mut buf);
+        unsafe { PyUnicode_FromStringAndSize(buf.as_ptr().cast::<c_char>(), len) }
+    }
 }
 
 pub extern "C" fn bytes_le(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
@@ -109,32 +122,74 @@ pub extern "C" fn fields(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject 
         return ptr::null_mut();
     }
     unsafe {
+        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
             py_tuple,
             0,
             PyLong_FromUnsignedLong((obj.hi >> 32) as c_ulong),
         );
+        #[cfg(PyPy)]
+        PyTuple_SetItem(
+            py_tuple,
+            0,
+            PyLong_FromUnsignedLong((obj.hi >> 32) as c_ulong),
+        );
+        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
             py_tuple,
             1,
             PyLong_FromUnsignedLong(((obj.hi >> 16) & 0xFFFF) as c_ulong),
         );
+        #[cfg(PyPy)]
+        PyTuple_SetItem(
+            py_tuple,
+            1,
+            PyLong_FromUnsignedLong(((obj.hi >> 16) & 0xFFFF) as c_ulong),
+        );
+        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
             py_tuple,
             2,
             PyLong_FromUnsignedLong((obj.hi & 0xFFFF) as c_ulong),
         );
+        #[cfg(PyPy)]
+        PyTuple_SetItem(
+            py_tuple,
+            2,
+            PyLong_FromUnsignedLong((obj.hi & 0xFFFF) as c_ulong),
+        );
+        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
             py_tuple,
             3,
             PyLong_FromUnsignedLong((obj.lo >> 56) as c_ulong),
         );
+        #[cfg(PyPy)]
+        PyTuple_SetItem(
+            py_tuple,
+            3,
+            PyLong_FromUnsignedLong((obj.lo >> 56) as c_ulong),
+        );
+        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
             py_tuple,
             4,
             PyLong_FromUnsignedLong(((obj.lo >> 48) & 0xFF) as c_ulong),
         );
+        #[cfg(PyPy)]
+        PyTuple_SetItem(
+            py_tuple,
+            4,
+            PyLong_FromUnsignedLong(((obj.lo >> 48) & 0xFF) as c_ulong),
+        );
+        #[cfg(not(PyPy))]
         PyTuple_SET_ITEM(
+            py_tuple,
+            5,
+            PyLong_FromUnsignedLongLong(obj.lo & 0xFFFF_FFFF_FFFF),
+        );
+        #[cfg(PyPy)]
+        PyTuple_SetItem(
             py_tuple,
             5,
             PyLong_FromUnsignedLongLong(obj.lo & 0xFFFF_FFFF_FFFF),

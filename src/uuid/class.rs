@@ -13,6 +13,10 @@ use pyo3::ffi::_PyLong_FromByteArray;
 use pyo3::ffi::{
     Py_ASNATIVEBYTES_BIG_ENDIAN, Py_ASNATIVEBYTES_UNSIGNED_BUFFER, PyLong_FromUnsignedNativeBytes,
 };
+#[cfg(not(PyPy))]
+use pyo3::ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE};
+#[cfg(PyPy)]
+use pyo3::ffi::{PyTuple_GetItem, PyTuple_Size};
 use pyo3::{
     PyErr, PyResult, Python,
     ffi::{
@@ -20,9 +24,8 @@ use pyo3::{
         Py_ssize_t, Py_tp_dealloc, Py_tp_free, Py_tp_getset, Py_tp_hash, Py_tp_methods, Py_tp_new,
         Py_tp_repr, Py_tp_richcompare, Py_tp_str, PyDict_Next, PyErr_Format, PyErr_SetString,
         PyExc_TypeError, PyGetSetDef, PyMethodDef, PyMethodDefPointer, PyModule_AddObjectRef,
-        PyObject, PyObject_Free, PyObject_New, PyObject_TypeCheck, PyTuple_GET_ITEM,
-        PyTuple_GET_SIZE, PyType_FromSpec, PyType_Slot, PyType_Spec, PyTypeObject,
-        PyUnicode_CompareWithASCIIString,
+        PyObject, PyObject_Free, PyObject_New, PyObject_TypeCheck, PyType_FromSpec, PyType_Slot,
+        PyType_Spec, PyTypeObject, PyUnicode_CompareWithASCIIString,
     },
 };
 
@@ -130,7 +133,10 @@ pub extern "C" fn uuid_type_new(
         return unsafe { (*tp).tp_alloc.unwrap()(tp, 0) };
     }
 
+    #[cfg(not(PyPy))]
     let nargs = unsafe { PyTuple_GET_SIZE(args) };
+    #[cfg(PyPy)]
+    let nargs = unsafe { PyTuple_Size(args) };
 
     if nargs > 1 {
         unsafe {
@@ -145,7 +151,14 @@ pub extern "C" fn uuid_type_new(
     let none = unsafe { Py_None() };
 
     let mut hex_obj = if nargs == 1 {
-        unsafe { PyTuple_GET_ITEM(args, 0) }
+        #[cfg(not(PyPy))]
+        {
+            unsafe { PyTuple_GET_ITEM(args, 0) }
+        }
+        #[cfg(PyPy)]
+        {
+            unsafe { PyTuple_GetItem(args, 0) }
+        }
     } else {
         none
     };

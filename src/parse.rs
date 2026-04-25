@@ -8,6 +8,8 @@ use std::{
     slice::from_raw_parts,
 };
 
+#[cfg(PyPy)]
+use pyo3::ffi::PySequence_GetItem;
 #[cfg(not(Py_3_13))]
 use pyo3::ffi::{_PyLong_AsByteArray, PyLongObject};
 #[cfg(Py_3_13)]
@@ -17,10 +19,11 @@ use pyo3::ffi::{
 use pyo3::ffi::{
     Py_DECREF, Py_None, Py_ssize_t, PyBytes_AsStringAndSize, PyErr_Clear, PyErr_ExceptionMatches,
     PyErr_Format, PyErr_Occurred, PyErr_SetString, PyExc_OverflowError, PyExc_TypeError,
-    PyExc_ValueError, PyList_Check, PyList_GET_ITEM, PyLong_AsUnsignedLongLong, PyLong_Check,
-    PyObject, PySequence_Fast, PySequence_Size, PyTuple_GET_ITEM, PyUnicode_AsUTF8AndSize,
-    PyUnicode_Check,
+    PyExc_ValueError, PyLong_AsUnsignedLongLong, PyLong_Check, PyObject, PySequence_Fast,
+    PySequence_Size, PyUnicode_AsUTF8AndSize, PyUnicode_Check,
 };
+#[cfg(not(PyPy))]
+use pyo3::ffi::{PyList_Check, PyList_GET_ITEM, PyTuple_GET_ITEM};
 
 use crate::hex::hex::parse_uuid_hex_str;
 
@@ -191,13 +194,23 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
     let mut parts = [0u64; 6];
 
     for i in 0usize..6 {
+        #[cfg(not(PyPy))]
         let item = if unsafe { PyList_Check(fast) } == 1 {
             unsafe { PyList_GET_ITEM(fast, i.cast_signed()) }
         } else {
             unsafe { PyTuple_GET_ITEM(fast, i.cast_signed()) }
         };
+        #[cfg(PyPy)]
+        let item = unsafe { PySequence_GetItem(fast, i.cast_signed()) };
+        #[cfg(PyPy)]
+        if item.is_null() {
+            unsafe { Py_DECREF(fast) };
+            return -1;
+        }
         let v = unsafe { PyLong_AsUnsignedLongLong(item) };
         unsafe {
+            #[cfg(PyPy)]
+            Py_DECREF(item);
             if !PyErr_Occurred().is_null() {
                 Py_DECREF(fast);
                 PyErr_Clear();
