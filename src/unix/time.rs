@@ -9,6 +9,5 @@ pub fn now_ms() -> u64 {
     unsafe {
         libc::clock_gettime(libc::CLOCK_REALTIME, addr_of_mut!(ts));
     }
-    (u64::from(ts.tv_sec.cast_unsigned()) * 1000)
-        + (u64::from(ts.tv_nsec.cast_unsigned()) / 1_000_000)
+    (ts.tv_sec.cast_unsigned() * 1000) + (ts.tv_nsec.cast_unsigned() / 1_000_000)
 }
