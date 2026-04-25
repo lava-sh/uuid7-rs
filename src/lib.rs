@@ -17,12 +17,13 @@ static GLOBAL_ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
 mod _core {
     use std::{ptr, ptr::addr_of_mut};
 
+    #[cfg(not(PyPy))]
+    use pyo3::ffi::PyModule_AddFunctions;
+    #[cfg(PyPy)]
+    use pyo3::ffi::{PyCFunction_NewEx, PyModule_AddObjectRef};
     use pyo3::{
         Bound, PyErr, PyResult,
-        ffi::{
-            METH_FASTCALL, METH_KEYWORDS, Py_DECREF, PyMethodDef, PyMethodDefPointer,
-            PyModule_AddFunctions, PyObject,
-        },
+        ffi::{METH_FASTCALL, METH_KEYWORDS, Py_DECREF, PyMethodDef, PyMethodDefPointer, PyObject},
         prelude::PyModule,
         pyfunction,
     };
@@ -57,7 +58,22 @@ mod _core {
                 PyMethodDef::zeroed(),
             ];
 
+            #[cfg(not(PyPy))]
             PyModule_AddFunctions(m, addr_of_mut!(METHODS).cast::<PyMethodDef>());
+
+            #[cfg(PyPy)]
+            {
+                let func =
+                    PyCFunction_NewEx(addr_of_mut!(METHODS[0]), ptr::null_mut(), ptr::null_mut());
+                if func.is_null() {
+                    return Err(PyErr::fetch(module.py()));
+                }
+                if PyModule_AddObjectRef(m, c"_uuid7".as_ptr(), func) < 0 {
+                    Py_DECREF(func);
+                    return Err(PyErr::fetch(module.py()));
+                }
+                Py_DECREF(func);
+            }
 
             add_obj(m, c"_UUID", UUID()?)?;
 
