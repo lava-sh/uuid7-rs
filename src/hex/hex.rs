@@ -1,9 +1,29 @@
 use std::os::raw::c_int;
 
-use crate::{
-    hex::table::{HEX_PAIR_TO_BYTE, HEX_PAIRS},
-    parse::bytes_to_hilo,
-};
+use crate::hex::table::{HEX_PAIR_TO_BYTE, HEX_PAIRS};
+
+macro_rules! hex_byte {
+    ($text:expr, $pos:expr) => {{
+        let v = HEX_PAIR_TO_BYTE[($text[$pos] as usize) << 8 | $text[$pos + 1] as usize];
+        if v < 0 {
+            return -1;
+        }
+        u64::from(v.cast_unsigned())
+    }};
+}
+
+macro_rules! hex_word {
+    ($text:expr, $a:expr, $b:expr, $c:expr, $d:expr, $e:expr, $f:expr, $g:expr, $h:expr) => {
+        (hex_byte!($text, $a) << 56)
+            | (hex_byte!($text, $b) << 48)
+            | (hex_byte!($text, $c) << 40)
+            | (hex_byte!($text, $d) << 32)
+            | (hex_byte!($text, $e) << 24)
+            | (hex_byte!($text, $f) << 16)
+            | (hex_byte!($text, $g) << 8)
+            | hex_byte!($text, $h)
+    };
+}
 
 #[inline]
 pub fn hex_pair(buf: &mut [u8], pos: usize, byte: u8) {
@@ -51,21 +71,6 @@ pub fn fmt_hex32(hi: u64, lo: u64, buf: &mut [u8]) {
     }
 }
 
-pub fn parse_hex32(text: &[u8], hi: &mut u64, lo: &mut u64) -> c_int {
-    let mut bytes = [0u8; 16];
-    let mut i = 0;
-    while i < 16 {
-        let v = HEX_PAIR_TO_BYTE[(text[i * 2] as usize) << 8 | text[i * 2 + 1] as usize];
-        if v < 0 {
-            return -1;
-        }
-        bytes[i] = u8::try_from(v).expect("hex table values are in byte range");
-        i += 1;
-    }
-    bytes_to_hilo(bytes.as_ptr(), hi, lo);
-    0
-}
-
 pub fn parse_uuid_hex_str(mut str: &[u8], hi: &mut u64, lo: &mut u64) -> c_int {
     if str.len() >= 9 && str[..9].eq_ignore_ascii_case(b"urn:uuid:") {
         str = &str[9..];
@@ -76,20 +81,18 @@ pub fn parse_uuid_hex_str(mut str: &[u8], hi: &mut u64, lo: &mut u64) -> c_int {
     }
 
     match str.len() {
-        32 => parse_hex32(str, hi, lo),
+        32 => {
+            *hi = hex_word!(str, 0, 2, 4, 6, 8, 10, 12, 14);
+            *lo = hex_word!(str, 16, 18, 20, 22, 24, 26, 28, 30);
+            0
+        }
         36 => {
             if str[8] != b'-' || str[13] != b'-' || str[18] != b'-' || str[23] != b'-' {
                 return -1;
             }
-            let mut flat = [0u8; 32];
-            unsafe {
-                std::ptr::copy_nonoverlapping(str.as_ptr(), flat.as_mut_ptr(), 8);
-                std::ptr::copy_nonoverlapping(str.as_ptr().add(9), flat.as_mut_ptr().add(8), 4);
-                std::ptr::copy_nonoverlapping(str.as_ptr().add(14), flat.as_mut_ptr().add(12), 4);
-                std::ptr::copy_nonoverlapping(str.as_ptr().add(19), flat.as_mut_ptr().add(16), 4);
-                std::ptr::copy_nonoverlapping(str.as_ptr().add(24), flat.as_mut_ptr().add(20), 12);
-            }
-            parse_hex32(&flat, hi, lo)
+            *hi = hex_word!(str, 0, 2, 4, 6, 9, 11, 14, 16);
+            *lo = hex_word!(str, 19, 21, 24, 26, 28, 30, 32, 34);
+            0
         }
         _ => -1,
     }
