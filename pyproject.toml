@@ -10,7 +10,7 @@ module-name = "uuid7_rs._core"
 name = "uuid7-rs"
 dynamic = ["version"]
 requires-python = ">=3.10"
-description = "..."
+description = "Fast UUID v7 generator written in Rust"
 readme = "README.md"
 license = "Unlicense"
 license-files = ["UNLICENSE"]
@@ -35,12 +35,12 @@ classifiers = [
 [dependency-groups]
 typos = ["typos == 1.45.1"]
 zizmor = ["zizmor == 1.24.1"]
-rumdl = ["rumdl == 0.1.78"]
+rumdl = ["rumdl == 0.1.81"]
 maturin = ["maturin == 1.13.1"]
 pytest = ["pytest == 9.0.3"]
 ci = [
     "ty == 0.0.32",
-    "ruff == 0.15.11",
+    "ruff == 0.15.12",
     { include-group = "maturin" },
     { include-group = "pytest" },
 ]
@@ -50,9 +50,22 @@ dev = [
     { include-group = "rumdl" },
     { include-group = "zizmor" },
 ]
-bench = []
+bench = [
+    "c_uuid_v7 == 0.0.10",
+    "uuid_utils == 0.14.1",
+    "uuid_v7 == 1.0.0",
+    "UUIDv7gen == 1.0.3",
+    "uuid6 == 2025.0.1",
+    "lastuuid == 0.5.0",
+    "fastuuid == 0.14.0",
+    # # # # # # # # # #
+    "polars == 1.40.1",
+    "altair == 6.1.0",
+    "py-cpuinfo == 9.0.0",
+    "vl-convert-python == 1.9.0.post1",
+]
 
 [project.urls]
 Source = "https://github.com/lava-sh/uuid7-rs"
 Homepage = "https://github.com/lava-sh/uuid7-rs"
-"Bug Tracker" = "https://github.com/lava-sh/uuid7-rs/issues"
+Bug_Tracker = "https://github.com/lava-sh/uuid7-rs/issues"

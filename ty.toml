@@ -1,0 +1,10 @@
+[environment]
+python-version = "3.10"
+root = ["./py-src"]
+
+[src]
+include = [
+    "py-src/**/*.py",
+    "py-src/**/*.pyi",
+    "tests/*.py",
+]

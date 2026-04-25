@@ -44,51 +44,62 @@ mod _core {
 
     #[pymodule_init]
     fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
-        let m = module.as_ptr();
-        unsafe {
-            static mut METHODS: [PyMethodDef; 2] = [
-                PyMethodDef {
-                    ml_name: c"_uuid7".as_ptr(),
-                    ml_meth: PyMethodDefPointer {
-                        PyCFunctionFastWithKeywords: uuid7,
-                    },
-                    ml_flags: METH_FASTCALL | METH_KEYWORDS,
-                    ml_doc: ptr::null(),
+        static mut METHODS: [PyMethodDef; 2] = [
+            PyMethodDef {
+                ml_name: c"_uuid7".as_ptr(),
+                ml_meth: PyMethodDefPointer {
+                    PyCFunctionFastWithKeywords: uuid7,
                 },
-                PyMethodDef::zeroed(),
-            ];
+                ml_flags: METH_FASTCALL | METH_KEYWORDS,
+                ml_doc: ptr::null(),
+            },
+            PyMethodDef::zeroed(),
+        ];
 
-            #[cfg(not(PyPy))]
+        let m = module.as_ptr();
+
+        #[cfg(not(PyPy))]
+        unsafe {
             PyModule_AddFunctions(m, addr_of_mut!(METHODS).cast::<PyMethodDef>());
+        }
 
-            #[cfg(PyPy)]
-            {
-                let func =
-                    PyCFunction_NewEx(addr_of_mut!(METHODS[0]), ptr::null_mut(), ptr::null_mut());
-                if func.is_null() {
-                    return Err(PyErr::fetch(module.py()));
-                }
-                if PyModule_AddObjectRef(m, c"_uuid7".as_ptr(), func) < 0 {
+        #[cfg(PyPy)]
+        {
+            let func = unsafe {
+                PyCFunction_NewEx(addr_of_mut!(METHODS[0]), ptr::null_mut(), ptr::null_mut())
+            };
+            if func.is_null() {
+                return Err(PyErr::fetch(module.py()));
+            }
+
+            if unsafe { PyModule_AddObjectRef(m, c"_uuid7".as_ptr(), func) } < 0 {
+                unsafe {
                     Py_DECREF(func);
-                    return Err(PyErr::fetch(module.py()));
-                }
+                };
+                return Err(PyErr::fetch(module.py()));
+            }
+            unsafe {
                 Py_DECREF(func);
             }
+        }
 
-            add_obj(m, c"_UUID", UUID()?)?;
+        add_obj(m, c"_UUID", unsafe { UUID()? })?;
 
-            let nil = uuid_new_uncached(0, 0);
-            if nil.is_null() {
-                return Err(PyErr::fetch(module.py()));
-            }
-            add_obj(m, c"_NIL", nil.cast::<PyObject>())?;
+        let nil = uuid_new_uncached(0, 0);
+        if nil.is_null() {
+            return Err(PyErr::fetch(module.py()));
+        }
+        add_obj(m, c"_NIL", nil.cast::<PyObject>())?;
+        unsafe {
             Py_DECREF(nil.cast::<PyObject>());
+        }
 
-            let max = uuid_new_uncached(u64::MAX, u64::MAX);
-            if max.is_null() {
-                return Err(PyErr::fetch(module.py()));
-            }
-            add_obj(m, c"_MAX", max.cast::<PyObject>())?;
+        let max = uuid_new_uncached(u64::MAX, u64::MAX);
+        if max.is_null() {
+            return Err(PyErr::fetch(module.py()));
+        }
+        add_obj(m, c"_MAX", max.cast::<PyObject>())?;
+        unsafe {
             Py_DECREF(max.cast::<PyObject>());
         }
         Ok(())
