@@ -28,7 +28,7 @@ mod _core {
     use super::rng;
     use crate::uuid::{
         class::{UUID, add_obj, uuid_new_uncached},
-        uuid7::uuid7,
+        uuid7::{uuid7, uuid7_int},
     };
 
     #[pyfunction]
@@ -41,11 +41,19 @@ mod _core {
 
     #[pymodule_init]
     fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
-        static mut METHODS: [PyMethodDef; 2] = [
+        static mut METHODS: [PyMethodDef; 3] = [
             PyMethodDef {
                 ml_name: c"_uuid7".as_ptr(),
                 ml_meth: PyMethodDefPointer {
                     PyCFunctionFastWithKeywords: uuid7,
+                },
+                ml_flags: METH_FASTCALL | METH_KEYWORDS,
+                ml_doc: ptr::null(),
+            },
+            PyMethodDef {
+                ml_name: c"_uuid7_int".as_ptr(),
+                ml_meth: PyMethodDefPointer {
+                    PyCFunctionFastWithKeywords: uuid7_int,
                 },
                 ml_flags: METH_FASTCALL | METH_KEYWORDS,
                 ml_doc: ptr::null(),
@@ -64,21 +72,29 @@ mod _core {
         {
             use pyo3::ffi::{PyCFunction_NewEx, PyModule_AddObjectRef};
 
-            let func = unsafe {
-                PyCFunction_NewEx(addr_of_mut!(METHODS[0]), ptr::null_mut(), ptr::null_mut())
-            };
-            if func.is_null() {
-                return Err(PyErr::fetch(module.py()));
-            }
+            for method in 0..2 {
+                let func = unsafe {
+                    PyCFunction_NewEx(
+                        addr_of_mut!(METHODS[method]),
+                        ptr::null_mut(),
+                        ptr::null_mut(),
+                    )
+                };
+                if func.is_null() {
+                    return Err(PyErr::fetch(module.py()));
+                }
 
-            if unsafe { PyModule_AddObjectRef(m, c"_uuid7".as_ptr(), func) } < 0 {
+                if unsafe { PyModule_AddObjectRef(m, METHODS[method].ml_name, func) } >= 0 {
+                    unsafe {
+                        Py_DECREF(func);
+                    }
+                    continue;
+                }
+
                 unsafe {
                     Py_DECREF(func);
-                };
+                }
                 return Err(PyErr::fetch(module.py()));
-            }
-            unsafe {
-                Py_DECREF(func);
             }
         }
 

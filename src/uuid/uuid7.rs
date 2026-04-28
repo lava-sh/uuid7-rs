@@ -9,7 +9,7 @@ use crate::{
     parse::parse_u64_arg,
     python::{
         exceptions::{PyTypeError, PyValueError},
-        ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE},
+        ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE, uuid_int_from_parts},
     },
     rng::{
         build_timestamp_ms, build_uuid7_default, build_uuid7_default_secure, build_uuid7_with_args,
@@ -18,12 +18,11 @@ use crate::{
     uuid::class::uuid_new,
 };
 
-pub extern "C" fn uuid7(
-    _self: *mut PyObject,
+fn uuid7_parts(
     args: *const *mut PyObject,
     nargs: Py_ssize_t,
     kwnames: *mut PyObject,
-) -> *mut PyObject {
+) -> Option<(u64, u64)> {
     const MAX_NANOS: u64 = 1_000_000_000;
 
     let nkw = if kwnames.is_null() {
@@ -35,14 +34,14 @@ pub extern "C" fn uuid7(
     if nargs == 0 && nkw == 0 {
         let (mut hi, mut lo) = (0u64, 0u64);
         if build_uuid7_default(&mut hi, &mut lo) != 0 {
-            return ptr::null_mut();
+            return None;
         }
-        return uuid_new(hi, lo).cast::<PyObject>();
+        return Some((hi, lo));
     }
 
     if nargs > 3 {
         PyTypeError::new_err(c"uuid7() takes at most 3 positional arguments");
-        return ptr::null_mut();
+        return None;
     }
 
     let none = unsafe { Py_None() };
@@ -90,7 +89,7 @@ pub extern "C" fn uuid7(
                         k,
                     );
                 }
-                return ptr::null_mut();
+                return None;
             }
         }
     }
@@ -100,7 +99,7 @@ pub extern "C" fn uuid7(
     } else {
         if unsafe { PyUnicode_Check(mode) } == 0 {
             PyTypeError::new_err(c"mode must be 'fast', 'secure', or None");
-            return ptr::null_mut();
+            return None;
         }
 
         match () {
@@ -110,7 +109,7 @@ pub extern "C" fn uuid7(
             }
             () => {
                 PyValueError::new_err(c"mode must be 'fast' or 'secure'");
-                return ptr::null_mut();
+                return None;
             }
         }
     };
@@ -119,30 +118,30 @@ pub extern "C" fn uuid7(
         let (mut hi, mut lo) = (0u64, 0u64);
 
         if build_uuid7_default_secure(&mut hi, &mut lo) != 0 {
-            return ptr::null_mut();
+            return None;
         }
-        return uuid_new(hi, lo).cast::<PyObject>();
+        return Some((hi, lo));
     }
 
     let (has_ts, ts_s) = parse_u64_arg(ts, c"timestamp".as_ptr());
 
     if has_ts < 0 {
-        return ptr::null_mut();
+        return None;
     }
 
     let (has_nanos, nanos) = parse_u64_arg(nanos, c"nanos".as_ptr());
     if has_nanos < 0 {
-        return ptr::null_mut();
+        return None;
     }
 
     if has_nanos > 0 && nanos >= MAX_NANOS {
         PyValueError::new_err(c"nanos must be in range 0..999999999");
-        return ptr::null_mut();
+        return None;
     }
 
     let timestamp_ms = match build_timestamp_ms(ts_s, has_ts > 0, nanos, has_nanos > 0) {
         Ok(v) => v,
-        Err(()) => return ptr::null_mut(),
+        Err(()) => return None,
     };
 
     let (mut hi, mut lo) = (0u64, 0u64);
@@ -168,8 +167,32 @@ pub extern "C" fn uuid7(
     };
 
     if mode != 0 {
-        return ptr::null_mut();
+        return None;
     }
 
-    uuid_new(hi, lo).cast::<PyObject>()
+    Some((hi, lo))
+}
+
+pub extern "C" fn uuid7(
+    _self: *mut PyObject,
+    args: *const *mut PyObject,
+    nargs: Py_ssize_t,
+    kwnames: *mut PyObject,
+) -> *mut PyObject {
+    match uuid7_parts(args, nargs, kwnames) {
+        Some((hi, lo)) => uuid_new(hi, lo).cast::<PyObject>(),
+        None => ptr::null_mut(),
+    }
+}
+
+pub extern "C" fn uuid7_int(
+    _self: *mut PyObject,
+    args: *const *mut PyObject,
+    nargs: Py_ssize_t,
+    kwnames: *mut PyObject,
+) -> *mut PyObject {
+    match uuid7_parts(args, nargs, kwnames) {
+        Some((hi, lo)) => uuid_int_from_parts(hi, lo),
+        None => ptr::null_mut(),
+    }
 }
