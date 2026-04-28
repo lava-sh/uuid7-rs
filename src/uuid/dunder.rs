@@ -11,7 +11,7 @@ use crate::{
 };
 
 pub extern "C" fn __str__(self_: *mut PyObject) -> *mut PyObject {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
 
     with_buf(36, |buf| {
         fmt_dashed(obj.hi, obj.lo, buf);
@@ -19,7 +19,7 @@ pub extern "C" fn __str__(self_: *mut PyObject) -> *mut PyObject {
 }
 
 pub extern "C" fn __repr__(self_: *mut PyObject) -> *mut PyObject {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
 
     with_buf(44, |buf| {
         buf[..6].copy_from_slice(b"UUID('");
@@ -30,7 +30,7 @@ pub extern "C" fn __repr__(self_: *mut PyObject) -> *mut PyObject {
 
 #[expect(clippy::cast_possible_wrap)]
 pub extern "C" fn __hash__(self_: *mut PyObject) -> Py_hash_t {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
     let h = (obj.hi ^ (obj.hi >> 32) ^ obj.lo ^ (obj.lo >> 32)) as Py_hash_t;
     if h == -1 { -2 } else { h }
 }

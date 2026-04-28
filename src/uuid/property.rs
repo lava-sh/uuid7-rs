@@ -8,20 +8,22 @@ use pyo3::ffi::{
     PyObject, PyTuple_New,
 };
 #[cfg(not(PyPy))]
-use pyo3::ffi::{PyTuple_SET_ITEM, PyUnicode_1BYTE_DATA, PyUnicode_New};
+use pyo3::ffi::{PyUnicode_1BYTE_DATA, PyUnicode_New};
 #[cfg(PyPy)]
-use pyo3::ffi::{PyTuple_SetItem as PyTuple_SET_ITEM, PyUnicode_FromStringAndSize};
+use pyo3::ffi::PyUnicode_FromStringAndSize;
 
 use crate::{
     hex::helpers::{fmt_dashed, fmt_hex32},
     parse::{uuid_to_bytes, uuid_to_bytes_le},
-    uuid::{class::uuid_int_from_parts, uuid_obj::UUIDObject},
+    python::ffi::uuid_int_from_parts,
+    uuid::uuid_obj::UUIDObject,
 };
+use crate::python::ffi::PyTuple_SET_ITEM;
 
 macro_rules! u64_getter {
     ($name:ident, $expr:expr) => {
         pub extern "C" fn $name(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
-            let obj = unsafe { &*(self_ as *const UUIDObject) };
+            let obj = UUIDObject::from_self(self_);
             unsafe { PyLong_FromUnsignedLongLong($expr(obj)) }
         }
     };
@@ -30,7 +32,7 @@ macro_rules! u64_getter {
 macro_rules! u32_getter {
     ($name:ident, $expr:expr) => {
         pub extern "C" fn $name(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
-            let obj = unsafe { &*(self_ as *const UUIDObject) };
+            let obj = UUIDObject::from_self(self_);
             unsafe { PyLong_FromUnsignedLong($expr(obj) as c_ulong) }
         }
     };
@@ -78,7 +80,7 @@ pub fn with_buf(len: Py_ssize_t, f: impl FnOnce(&mut [u8])) -> *mut PyObject {
 }
 
 pub extern "C" fn bytes_le(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
     let mut bytes = [0u8; 16];
     let mut reordered = [0u8; 16];
     uuid_to_bytes(obj.hi, obj.lo, bytes.as_mut_ptr());
@@ -87,12 +89,12 @@ pub extern "C" fn bytes_le(self_: *mut PyObject, _: *mut c_void) -> *mut PyObjec
 }
 
 pub extern "C" fn int(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
     uuid_int_from_parts(obj.hi, obj.lo)
 }
 
 pub extern "C" fn hex(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
 
     with_buf(32, |buf| {
         fmt_hex32(obj.hi, obj.lo, buf);
@@ -100,14 +102,14 @@ pub extern "C" fn hex(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
 }
 
 pub extern "C" fn bytes(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
     let mut bytes = [0u8; 16];
     uuid_to_bytes(obj.hi, obj.lo, bytes.as_mut_ptr());
     unsafe { PyBytes_FromStringAndSize(bytes.as_ptr().cast::<c_char>(), 16) }
 }
 
 pub extern "C" fn urn(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
 
     with_buf(45, |buf| {
         buf[..9].copy_from_slice(b"urn:uuid:");
@@ -116,7 +118,7 @@ pub extern "C" fn urn(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
 }
 
 pub extern "C" fn fields(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
     let py_tuple = unsafe { PyTuple_New(6) };
     if py_tuple.is_null() {
         return ptr::null_mut();
@@ -157,7 +159,7 @@ pub extern "C" fn fields(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject 
 }
 
 pub extern "C" fn get_clock_seq(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
     let hi = ((obj.lo >> 56) & 0x3F) as u32;
     let lo = ((obj.lo >> 48) & 0xFF) as u32;
     unsafe { PyLong_FromUnsignedLong(c_ulong::from((hi << 8) | lo)) }

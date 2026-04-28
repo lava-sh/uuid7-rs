@@ -1,5 +1,6 @@
 mod hex;
 mod parse;
+mod python;
 mod rng;
 
 #[cfg(unix)]
@@ -17,13 +18,12 @@ static GLOBAL_ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
 mod _core {
     use std::{ptr, ptr::addr_of_mut};
 
-    #[cfg(not(PyPy))]
-    use pyo3::ffi::PyModule_AddFunctions;
-    #[cfg(PyPy)]
-    use pyo3::ffi::{PyCFunction_NewEx, PyModule_AddObjectRef};
     use pyo3::{
         Bound, PyErr, PyResult,
-        ffi::{METH_FASTCALL, METH_KEYWORDS, Py_DECREF, PyMethodDef, PyMethodDefPointer, PyObject},
+        ffi::{
+            METH_FASTCALL, METH_KEYWORDS, Py_DECREF, PyMethodDef, PyMethodDefPointer,
+            PyModule_AddFunctions, PyObject,
+        },
         prelude::PyModule,
         pyfunction,
     };
@@ -65,6 +65,8 @@ mod _core {
 
         #[cfg(PyPy)]
         {
+            use pyo3::ffi::{PyCFunction_NewEx, PyModule_AddObjectRef};
+
             let func = unsafe {
                 PyCFunction_NewEx(addr_of_mut!(METHODS[0]), ptr::null_mut(), ptr::null_mut())
             };
