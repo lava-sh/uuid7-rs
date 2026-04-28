@@ -175,6 +175,8 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
 
             #[cfg(PyPy)]
             {
+                use pyo3::ffi::PySequence_GetItem;
+
                 let item = unsafe { PySequence_GetItem(fast, i.cast_signed()) };
                 if item.is_null() {
                     unsafe { Py_DECREF(fast) };
