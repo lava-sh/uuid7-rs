@@ -165,12 +165,17 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
             unsafe { PyTuple_GET_ITEM(fast, i.cast_signed()) }
         };
         #[cfg(PyPy)]
-        let item = unsafe { PySequence_GetItem(fast, i.cast_signed()) };
-        #[cfg(PyPy)]
-        if item.is_null() {
-            unsafe { Py_DECREF(fast) };
-            return -1;
+        {
+            use pyo3::ffi::PySequence_GetItem;
+
+            let item = unsafe { PySequence_GetItem(fast, i.cast_signed()) };
+
+            if item.is_null() {
+                unsafe { Py_DECREF(fast) };
+                return -1;
+            }
         }
+
         let v = unsafe { PyLong_AsUnsignedLongLong(item) };
         unsafe {
             #[cfg(PyPy)]
