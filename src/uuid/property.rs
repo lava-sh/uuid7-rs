@@ -9,16 +9,13 @@ use pyo3::ffi::{
 };
 #[cfg(not(PyPy))]
 use pyo3::ffi::{PyUnicode_1BYTE_DATA, PyUnicode_New};
-#[cfg(PyPy)]
-use pyo3::ffi::PyUnicode_FromStringAndSize;
 
 use crate::{
     hex::helpers::{fmt_dashed, fmt_hex32},
     parse::{uuid_to_bytes, uuid_to_bytes_le},
-    python::ffi::uuid_int_from_parts,
+    python::ffi::{PyTuple_SET_ITEM, uuid_int_from_parts},
     uuid::uuid_obj::UUIDObject,
 };
-use crate::python::ffi::PyTuple_SET_ITEM;
 
 macro_rules! u64_getter {
     ($name:ident, $expr:expr) => {
@@ -73,6 +70,8 @@ pub fn with_buf(len: Py_ssize_t, f: impl FnOnce(&mut [u8])) -> *mut PyObject {
     }
     #[cfg(PyPy)]
     {
+        use pyo3::ffi::PyUnicode_FromStringAndSize;
+
         let mut buf = vec![0u8; len.cast_unsigned()];
         f(&mut buf);
         unsafe { PyUnicode_FromStringAndSize(buf.as_ptr().cast::<c_char>(), len) }

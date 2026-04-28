@@ -12,9 +12,8 @@ pub use pyo3::ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE, PyTuple_SET_ITEM};
 //
 #[cfg(PyPy)]
 pub use pyo3::ffi::{
-    PyTuple_GetItem as PyTuple_GET_ITEM,
+    PyTuple_GetItem as PyTuple_GET_ITEM, PyTuple_SetItem as PyTuple_SET_ITEM,
     PyTuple_Size as PyTuple_GET_SIZE,
-    PyTuple_SetItem as PyTuple_SET_ITEM
 };
 
 #[cfg(all(Py_3_14, not(PyPy)))]
