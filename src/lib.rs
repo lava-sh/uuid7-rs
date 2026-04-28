@@ -20,10 +20,7 @@ mod _core {
 
     use pyo3::{
         Bound, PyErr, PyResult,
-        ffi::{
-            METH_FASTCALL, METH_KEYWORDS, Py_DECREF, PyMethodDef, PyMethodDefPointer,
-            PyModule_AddFunctions, PyObject,
-        },
+        ffi::{METH_FASTCALL, METH_KEYWORDS, Py_DECREF, PyMethodDef, PyMethodDefPointer, PyObject},
         prelude::PyModule,
         pyfunction,
     };
@@ -60,7 +57,7 @@ mod _core {
 
         #[cfg(not(PyPy))]
         unsafe {
-            PyModule_AddFunctions(m, addr_of_mut!(METHODS).cast::<PyMethodDef>());
+            pyo3::ffi::PyModule_AddFunctions(m, addr_of_mut!(METHODS).cast::<PyMethodDef>());
         }
 
         #[cfg(PyPy)]

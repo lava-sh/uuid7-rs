@@ -158,23 +158,26 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
     let mut parts = [0u64; 6];
 
     for i in 0usize..6 {
-        #[cfg(not(PyPy))]
-        let item = if unsafe { PyList_Check(fast) } == 1 {
-            unsafe { PyList_GET_ITEM(fast, i.cast_signed()) }
-        } else {
-            unsafe { PyTuple_GET_ITEM(fast, i.cast_signed()) }
-        };
-        #[cfg(PyPy)]
-        {
-            use pyo3::ffi::PySequence_GetItem;
-
-            let item = unsafe { PySequence_GetItem(fast, i.cast_signed()) };
-
-            if item.is_null() {
-                unsafe { Py_DECREF(fast) };
-                return -1;
+        let item = {
+            #[cfg(not(PyPy))]
+            {
+                if unsafe { PyList_Check(fast) } == 1 {
+                    unsafe { PyList_GET_ITEM(fast, i.cast_signed()) }
+                } else {
+                    unsafe { PyTuple_GET_ITEM(fast, i.cast_signed()) }
+                }
             }
-        }
+
+            #[cfg(PyPy)]
+            {
+                let item = unsafe { PySequence_GetItem(fast, i.cast_signed()) };
+                if item.is_null() {
+                    unsafe { Py_DECREF(fast) };
+                    return -1;
+                }
+                item
+            }
+        };
 
         let v = unsafe { PyLong_AsUnsignedLongLong(item) };
         unsafe {
