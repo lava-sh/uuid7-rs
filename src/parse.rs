@@ -25,7 +25,7 @@ use pyo3::ffi::{
 #[cfg(not(PyPy))]
 use pyo3::ffi::{PyList_Check, PyList_GET_ITEM, PyTuple_GET_ITEM};
 
-use crate::hex::hex::parse_uuid_hex_str;
+use crate::hex::helpers::parse_uuid_hex_str;
 
 #[inline]
 pub fn bytes_to_hilo(bytes: *const u8, hi: &mut u64, lo: &mut u64) {
@@ -68,7 +68,7 @@ pub fn uuid_to_bytes_le_ptr(src: *const u8, dst: *mut u8) {
     }
 }
 
-pub fn parse_uuid_text(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int {
+pub fn parse_uuid(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int {
     unsafe {
         if PyUnicode_Check(value) == 0 {
             PyErr_SetString(PyExc_TypeError, c"UUID() argument must be a str".as_ptr());

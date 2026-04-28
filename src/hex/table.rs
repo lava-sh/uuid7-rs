@@ -25,7 +25,7 @@ const fn hex_nibble(c: u8) -> i8 {
     -1
 }
 
-#[allow(clippy::large_stack_arrays)]
+#[expect(clippy::large_stack_arrays)]
 const fn build_hex_pair_to_byte() -> [i16; 65536] {
     let mut tmp = [-1i16; 65536];
     let mut h = 0u16;

@@ -1,3 +1,2 @@
-#[allow(clippy::module_inception)]
-pub mod hex;
+pub mod helpers;
 pub mod table;

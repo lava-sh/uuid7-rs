@@ -13,7 +13,7 @@ use pyo3::ffi::{PyTuple_SET_ITEM, PyUnicode_1BYTE_DATA, PyUnicode_New};
 use pyo3::ffi::{PyTuple_SetItem as PyTuple_SET_ITEM, PyUnicode_FromStringAndSize};
 
 use crate::{
-    hex::hex::{fmt_dashed, fmt_hex32},
+    hex::helpers::{fmt_dashed, fmt_hex32},
     parse::{uuid_to_bytes, uuid_to_bytes_le},
     uuid::{class::uuid_int_from_parts, uuid_obj::UUIDObject},
 };

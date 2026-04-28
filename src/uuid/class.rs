@@ -24,7 +24,7 @@ use pyo3::{
 #[cfg(not(all(Py_3_14, not(PyPy))))]
 use crate::parse::uuid_to_bytes;
 use crate::{
-    parse::{parse_uuid_bytes, parse_uuid_fields, parse_uuid_int, parse_uuid_text},
+    parse::{parse_uuid, parse_uuid_bytes, parse_uuid_fields, parse_uuid_int},
     uuid::{
         dunder::{__copy__, __hash__, __repr__, __str__, richcompare},
         property::{
@@ -264,7 +264,7 @@ pub extern "C" fn uuid_type_new(
 
     let (mut hi, mut lo) = (0u64, 0u64);
     if hex_obj != none {
-        if parse_uuid_text(hex_obj, &mut hi, &mut lo) != 0 {
+        if parse_uuid(hex_obj, &mut hi, &mut lo) != 0 {
             return ptr::null_mut();
         }
     } else if bytes_obj != none {
@@ -344,7 +344,7 @@ static mut UUID_GETSET: [PyGetSetDef; 17] = [
     },
 ];
 
-#[allow(non_snake_case)]
+#[expect(non_snake_case)]
 pub unsafe fn UUID() -> PyResult<*mut PyObject> {
     let mut slots = [
         PyType_Slot {
