@@ -5,11 +5,10 @@ use std::{
 };
 
 use pyo3::ffi::{
-    Py_ASNATIVEBYTES_BIG_ENDIAN, Py_ASNATIVEBYTES_UNSIGNED_BUFFER, Py_DECREF, Py_None, Py_ssize_t,
-    PyBytes_AsStringAndSize, PyErr_Clear, PyErr_ExceptionMatches, PyErr_Format, PyErr_Occurred,
-    PyExc_OverflowError, PyExc_TypeError, PyList_Check, PyList_GET_ITEM, PyLong_AsUnsignedLongLong,
-    PyLong_Check, PyObject, PySequence_Fast, PySequence_Size, PyUnicode_AsUTF8AndSize,
-    PyUnicode_Check,
+    Py_DECREF, Py_None, Py_ssize_t, PyBytes_AsStringAndSize, PyErr_Clear, PyErr_ExceptionMatches,
+    PyErr_Format, PyErr_Occurred, PyExc_OverflowError, PyExc_TypeError, PyList_Check,
+    PyList_GET_ITEM, PyLong_AsUnsignedLongLong, PyLong_Check, PyObject, PySequence_Fast,
+    PySequence_Size, PyUnicode_AsUTF8AndSize, PyUnicode_Check,
 };
 
 use crate::{
@@ -115,7 +114,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
             value,
             bytes.as_mut_ptr().cast::<std::os::raw::c_void>(),
             16,
-            Py_ASNATIVEBYTES_BIG_ENDIAN | Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
+            pyo3::ffi::Py_ASNATIVEBYTES_BIG_ENDIAN | pyo3::ffi::Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
         )
     };
     #[cfg(not(Py_3_13))]
