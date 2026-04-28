@@ -6,16 +6,16 @@ use std::{
 
 use pyo3::ffi::{
     Py_DECREF, Py_None, Py_ssize_t, PyBytes_AsStringAndSize, PyErr_Clear, PyErr_ExceptionMatches,
-    PyErr_Format, PyErr_Occurred, PyExc_OverflowError, PyExc_TypeError, PyList_Check,
-    PyList_GET_ITEM, PyLong_AsUnsignedLongLong, PyLong_Check, PyObject, PySequence_Fast,
-    PySequence_Size, PyUnicode_AsUTF8AndSize, PyUnicode_Check,
+    PyErr_Format, PyErr_Occurred, PyExc_OverflowError, PyExc_TypeError, PyLong_AsUnsignedLongLong,
+    PyLong_Check, PyObject, PySequence_Fast, PySequence_Size, PyUnicode_AsUTF8AndSize,
+    PyUnicode_Check,
 };
 
 use crate::{
     hex::helpers::parse_uuid_hex_str,
     python::{
         exceptions::{PyTypeError, PyValueError},
-        ffi::{PyLong_AsNativeBytes, PyTuple_GET_ITEM},
+        ffi::PyLong_AsNativeBytes,
     },
 };
 
@@ -166,6 +166,10 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
         let item = {
             #[cfg(not(PyPy))]
             {
+                use pyo3::ffi::{PyList_Check, PyList_GET_ITEM};
+
+                use crate::python::ffi::PyTuple_GET_ITEM;
+
                 if unsafe { PyList_Check(fast) } == 1 {
                     unsafe { PyList_GET_ITEM(fast, i.cast_signed()) }
                 } else {
