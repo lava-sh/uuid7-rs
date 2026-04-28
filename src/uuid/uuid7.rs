@@ -1,16 +1,16 @@
 use std::ptr;
 
 use pyo3::ffi::{
-    Py_None, Py_ssize_t, PyErr_Format, PyErr_SetString, PyExc_TypeError, PyExc_ValueError,
-    PyObject, PyUnicode_Check, PyUnicode_CompareWithASCIIString,
+    Py_None, Py_ssize_t, PyErr_Format, PyExc_TypeError, PyObject, PyUnicode_Check,
+    PyUnicode_CompareWithASCIIString,
 };
-#[cfg(not(PyPy))]
-use pyo3::ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE};
-#[cfg(PyPy)]
-use pyo3::ffi::{PyTuple_GetItem as PyTuple_GET_ITEM, PyTuple_Size as PyTuple_GET_SIZE};
 
 use crate::{
     parse::parse_u64_arg,
+    python::{
+        exceptions::{PyTypeError, PyValueError},
+        ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE},
+    },
     rng::{
         build_timestamp_ms, build_uuid7_default, build_uuid7_default_secure, build_uuid7_with_args,
         build_uuid7_with_args_secure,
@@ -41,12 +41,7 @@ pub extern "C" fn uuid7(
     }
 
     if nargs > 3 {
-        unsafe {
-            PyErr_SetString(
-                PyExc_TypeError,
-                c"uuid7() takes at most 3 positional arguments".as_ptr(),
-            );
-        }
+        PyTypeError::new_err(c"uuid7() takes at most 3 positional arguments");
         return ptr::null_mut();
     }
 
@@ -104,12 +99,7 @@ pub extern "C" fn uuid7(
         false
     } else {
         if unsafe { PyUnicode_Check(mode) } == 0 {
-            unsafe {
-                PyErr_SetString(
-                    PyExc_TypeError,
-                    c"mode must be 'fast', 'secure', or None".as_ptr(),
-                );
-            }
+            PyTypeError::new_err(c"mode must be 'fast', 'secure', or None");
             return ptr::null_mut();
         }
 
@@ -119,12 +109,7 @@ pub extern "C" fn uuid7(
                 true
             }
             () => {
-                unsafe {
-                    PyErr_SetString(
-                        PyExc_ValueError,
-                        c"mode must be 'fast' or 'secure'".as_ptr(),
-                    );
-                }
+                PyValueError::new_err(c"mode must be 'fast' or 'secure'");
                 return ptr::null_mut();
             }
         }
@@ -151,12 +136,7 @@ pub extern "C" fn uuid7(
     }
 
     if has_nanos > 0 && nanos >= MAX_NANOS {
-        unsafe {
-            PyErr_SetString(
-                PyExc_ValueError,
-                c"nanos must be in range 0..999999999".as_ptr(),
-            );
-        }
+        PyValueError::new_err(c"nanos must be in range 0..999999999");
         return ptr::null_mut();
     }
 

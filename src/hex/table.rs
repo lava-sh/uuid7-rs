@@ -13,25 +13,21 @@ const fn build_hex_pairs() -> [u8; 512] {
 }
 
 const fn hex_nibble(c: u8) -> i8 {
-    if c >= b'0' && c <= b'9' {
-        return (c - b'0').cast_signed();
+    match c {
+        b'0'..=b'9' => (c - b'0').cast_signed(),
+        b'a'..=b'f' => (c - b'a' + 10).cast_signed(),
+        b'A'..=b'F' => (c - b'A' + 10).cast_signed(),
+        _ => -1,
     }
-    if c >= b'a' && c <= b'f' {
-        return (c - b'a' + 10).cast_signed();
-    }
-    if c >= b'A' && c <= b'F' {
-        return (c - b'A' + 10).cast_signed();
-    }
-    -1
 }
 
-#[allow(clippy::large_stack_arrays)]
+#[expect(clippy::large_stack_arrays)]
 const fn build_hex_pair_to_byte() -> [i16; 65536] {
     let mut tmp = [-1i16; 65536];
-    let mut h = 0u16;
+    let mut i = 0u16;
 
-    while h < 256 {
-        let hn = hex_nibble(h as u8);
+    while i < 256 {
+        let hn = hex_nibble(i as u8);
 
         if hn >= 0 {
             let mut l = 0u16;
@@ -40,14 +36,14 @@ const fn build_hex_pair_to_byte() -> [i16; 65536] {
                 let ln = hex_nibble(l as u8);
 
                 if ln >= 0 {
-                    tmp[(h << 8 | l) as usize] = ((hn as i16) << 4) | ln as i16;
+                    tmp[(i << 8 | l) as usize] = ((hn as i16) << 4) | ln as i16;
                 }
 
                 l += 1;
             }
         }
 
-        h += 1;
+        i += 1;
     }
 
     tmp

@@ -5,26 +5,24 @@ use std::{
     ptr::addr_of_mut,
 };
 
-#[cfg(not(PyPy))]
-use pyo3::ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE};
-#[cfg(PyPy)]
-use pyo3::ffi::{PyTuple_GetItem as PyTuple_GET_ITEM, PyTuple_Size as PyTuple_GET_SIZE};
 use pyo3::{
     PyErr, PyResult, Python,
     ffi::{
         METH_NOARGS, METH_O, Py_INCREF, Py_None, Py_REFCNT, Py_TPFLAGS_DEFAULT, Py_nb_int,
         Py_ssize_t, Py_tp_dealloc, Py_tp_free, Py_tp_getset, Py_tp_hash, Py_tp_methods, Py_tp_new,
-        Py_tp_repr, Py_tp_richcompare, Py_tp_str, PyDict_Next, PyErr_Format, PyErr_SetString,
-        PyExc_TypeError, PyGetSetDef, PyMethodDef, PyMethodDefPointer, PyModule_AddObjectRef,
-        PyObject, PyObject_Free, PyObject_New, PyObject_TypeCheck, PyType_FromSpec, PyType_Slot,
-        PyType_Spec, PyTypeObject, PyUnicode_CompareWithASCIIString,
+        Py_tp_repr, Py_tp_richcompare, Py_tp_str, PyDict_Next, PyErr_Format, PyExc_TypeError,
+        PyGetSetDef, PyMethodDef, PyMethodDefPointer, PyModule_AddObjectRef, PyObject,
+        PyObject_Free, PyObject_New, PyObject_TypeCheck, PyType_FromSpec, PyType_Slot, PyType_Spec,
+        PyTypeObject, PyUnicode_CompareWithASCIIString,
     },
 };
 
-#[cfg(not(all(Py_3_14, not(PyPy))))]
-use crate::parse::uuid_to_bytes;
 use crate::{
-    parse::{parse_uuid_bytes, parse_uuid_fields, parse_uuid_int, parse_uuid_text},
+    parse::{parse_uuid, parse_uuid_bytes, parse_uuid_fields, parse_uuid_int},
+    python::{
+        exceptions::PyTypeError,
+        ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE, uuid_int_from_parts},
+    },
     uuid::{
         dunder::{__copy__, __hash__, __repr__, __str__, richcompare},
         property::{
@@ -99,74 +97,6 @@ pub extern "C" fn uuid_nb_int(self_: *mut PyObject) -> *mut PyObject {
     }
 }
 
-#[cfg(all(Py_3_14, not(PyPy)))]
-#[repr(C)]
-struct PyLongWriter {
-    _opaque: [u8; 0],
-}
-
-#[cfg(all(Py_3_14, not(PyPy)))]
-unsafe extern "C" {
-    fn PyLongWriter_Create(
-        negative: c_int,
-        ndigits: pyo3::ffi::Py_ssize_t,
-        digits: *mut *mut c_void,
-    ) -> *mut PyLongWriter;
-    fn PyLongWriter_Finish(writer: *mut PyLongWriter) -> *mut PyObject;
-}
-
-#[cfg(all(Py_3_14, not(PyPy)))]
-pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
-    const SHIFT: u32 = 30;
-    const MASK: u64 = (1 << SHIFT) - 1;
-
-    let mut digits_ptr: *mut c_void = ptr::null_mut();
-    let writer = unsafe { PyLongWriter_Create(0, 5, addr_of_mut!(digits_ptr)) };
-    if writer.is_null() {
-        return ptr::null_mut();
-    }
-    let d = digits_ptr.cast::<u32>();
-    unsafe {
-        d.write((lo & MASK) as u32); // bits 0..29
-        d.add(1).write(((lo >> 30) & MASK) as u32); // bits 30..59
-        d.add(2).write((((lo >> 60) | (hi << 4)) & MASK) as u32); // bits 60..89
-        d.add(3).write(((hi >> 26) & MASK) as u32); // bits 90..119
-        d.add(4).write((hi >> 56) as u32); // bits 120..127
-        PyLongWriter_Finish(writer)
-    }
-}
-
-#[cfg(all(Py_3_13, not(all(Py_3_14, not(PyPy)))))]
-pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
-    use pyo3::ffi::{
-        Py_ASNATIVEBYTES_BIG_ENDIAN, Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
-        PyLong_FromUnsignedNativeBytes,
-    };
-
-    let mut bytes = [0u8; 16];
-    unsafe {
-        uuid_to_bytes(hi, lo, bytes.as_mut_ptr());
-        PyLong_FromUnsignedNativeBytes(
-            bytes.as_ptr().cast::<c_void>(),
-            16,
-            Py_ASNATIVEBYTES_BIG_ENDIAN | Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
-        )
-    }
-}
-
-#[cfg(not(Py_3_13))]
-pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
-    use std::os::raw::c_uchar;
-
-    use pyo3::ffi::_PyLong_FromByteArray;
-
-    let mut bytes = [0u8; 16];
-    unsafe {
-        uuid_to_bytes(hi, lo, bytes.as_mut_ptr());
-        _PyLong_FromByteArray(bytes.as_ptr().cast::<c_uchar>(), 16, 0, 0)
-    }
-}
-
 pub extern "C" fn uuid_type_new(
     tp: *mut PyTypeObject,
     args: *mut PyObject,
@@ -179,12 +109,7 @@ pub extern "C" fn uuid_type_new(
     let nargs = unsafe { PyTuple_GET_SIZE(args) };
 
     if nargs > 1 {
-        unsafe {
-            PyErr_SetString(
-                PyExc_TypeError,
-                c"UUID() takes at most 1 positional argument".as_ptr(),
-            );
-        }
+        PyTypeError::new_err(c"UUID() takes at most 1 positional argument");
         return ptr::null_mut();
     }
 
@@ -218,12 +143,7 @@ pub extern "C" fn uuid_type_new(
                 fields_obj = v;
             } else if unsafe { PyUnicode_CompareWithASCIIString(k, c"hex".as_ptr()) } == 0 {
                 if nargs == 1 {
-                    unsafe {
-                        PyErr_SetString(
-                            PyExc_TypeError,
-                            c"argument for UUID() given by name ('hex') and position".as_ptr(),
-                        );
-                    }
+                    PyTypeError::new_err(c"argument for UUID() given by name ('hex') and position");
                     return ptr::null_mut();
                 }
                 hex_obj = v;
@@ -247,12 +167,9 @@ pub extern "C" fn uuid_type_new(
         + c_int::from(int_obj != none);
 
     if provided != 1 {
-        unsafe {
-            PyErr_SetString(
-                PyExc_TypeError,
-                c"one of the hex, bytes, bytes_le, fields, or int arguments must be given".as_ptr(),
-            );
-        }
+        PyTypeError::new_err(
+            c"one of the hex, bytes, bytes_le, fields, or int arguments must be given",
+        );
         return ptr::null_mut();
     }
     unsafe {
@@ -264,7 +181,7 @@ pub extern "C" fn uuid_type_new(
 
     let (mut hi, mut lo) = (0u64, 0u64);
     if hex_obj != none {
-        if parse_uuid_text(hex_obj, &mut hi, &mut lo) != 0 {
+        if parse_uuid(hex_obj, &mut hi, &mut lo) != 0 {
             return ptr::null_mut();
         }
     } else if bytes_obj != none {
@@ -344,7 +261,7 @@ static mut UUID_GETSET: [PyGetSetDef; 17] = [
     },
 ];
 
-#[allow(non_snake_case)]
+#[expect(non_snake_case)]
 pub unsafe fn UUID() -> PyResult<*mut PyObject> {
     let mut slots = [
         PyType_Slot {

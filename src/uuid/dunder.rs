@@ -6,12 +6,12 @@ use pyo3::ffi::{
 };
 
 use crate::{
-    hex::hex::fmt_dashed,
+    hex::helpers::fmt_dashed,
     uuid::{class::UUID_PTR, property::with_buf, uuid_obj::UUIDObject},
 };
 
 pub extern "C" fn __str__(self_: *mut PyObject) -> *mut PyObject {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
 
     with_buf(36, |buf| {
         fmt_dashed(obj.hi, obj.lo, buf);
@@ -19,7 +19,7 @@ pub extern "C" fn __str__(self_: *mut PyObject) -> *mut PyObject {
 }
 
 pub extern "C" fn __repr__(self_: *mut PyObject) -> *mut PyObject {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
 
     with_buf(44, |buf| {
         buf[..6].copy_from_slice(b"UUID('");
@@ -28,9 +28,9 @@ pub extern "C" fn __repr__(self_: *mut PyObject) -> *mut PyObject {
     })
 }
 
-#[allow(clippy::cast_possible_wrap)]
+#[expect(clippy::cast_possible_wrap)]
 pub extern "C" fn __hash__(self_: *mut PyObject) -> Py_hash_t {
-    let obj = unsafe { &*(self_ as *const UUIDObject) };
+    let obj = UUIDObject::from_self(self_);
     let h = (obj.hi ^ (obj.hi >> 32) ^ obj.lo ^ (obj.lo >> 32)) as Py_hash_t;
     if h == -1 { -2 } else { h }
 }
@@ -42,7 +42,7 @@ pub extern "C" fn __copy__(self_: *mut PyObject, _arg: *mut PyObject) -> *mut Py
     self_
 }
 
-#[allow(non_upper_case_globals)]
+#[expect(non_upper_case_globals)]
 pub extern "C" fn richcompare(a: *mut PyObject, b: *mut PyObject, op: c_int) -> *mut PyObject {
     unsafe {
         if Py_TYPE(a) != UUID_PTR || Py_TYPE(b) != UUID_PTR {

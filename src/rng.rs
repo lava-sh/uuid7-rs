@@ -1,7 +1,6 @@
 use std::os::raw::c_int;
 
-use pyo3::ffi::{PyErr_SetString, PyExc_OSError, PyExc_ValueError};
-
+use crate::python::exceptions::{PyOSError, PyValueError};
 #[cfg(unix)]
 pub use crate::unix::time::now_ms;
 #[cfg(windows)]
@@ -51,9 +50,7 @@ fn w1rand() -> u64 {
 fn seed_rng() -> c_int {
     let mut buf = [0u8; 16];
     if fill_random(&mut buf) != 0 {
-        unsafe {
-            PyErr_SetString(PyExc_OSError, c"unable to generate random bytes".as_ptr());
-        }
+        PyOSError::new_err(c"unable to generate random bytes");
         return -1;
     }
     let l = u64::from_ne_bytes(buf[..8].try_into().expect("8-byte seed chunk"));
@@ -69,9 +66,7 @@ fn seed_rng() -> c_int {
 pub fn rnd_u64_secure() -> Result<u64, ()> {
     let mut buf = [0u8; 8];
     if fill_random(&mut buf) != 0 {
-        unsafe {
-            PyErr_SetString(PyExc_OSError, c"unable to generate random bytes".as_ptr());
-        }
+        PyOSError::new_err(c"unable to generate random bytes");
         return Err(());
     }
     Ok(u64::from_ne_bytes(buf))
@@ -277,9 +272,7 @@ pub fn build_timestamp_ms(ts_s: u64, has_ts: bool, nanos: u64, has_nanos: bool) 
     }
 
     if ts_s > V7_MAX_TS_S {
-        unsafe {
-            PyErr_SetString(PyExc_ValueError, c"timestamp is too large".as_ptr());
-        }
+        PyValueError::new_err(c"timestamp is too large");
         return Err(());
     }
 
@@ -290,9 +283,7 @@ pub fn build_timestamp_ms(ts_s: u64, has_ts: bool, nanos: u64, has_nanos: bool) 
     }
 
     if ms > V7_MAX_TS_MS {
-        unsafe {
-            PyErr_SetString(PyExc_ValueError, c"timestamp is too large".as_ptr());
-        }
+        PyValueError::new_err(c"timestamp is too large");
         return Err(());
     }
     Ok(ms)

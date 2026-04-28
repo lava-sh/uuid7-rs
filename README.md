@@ -18,13 +18,13 @@
 
 ## Installation
 
-Using pip
+Using pip:
 
 ```bash
 pip install uuid7-rs
 ```
 
-Using uv
+Using uv:
 
 ```bash
 uv pip install uuid7-rs
