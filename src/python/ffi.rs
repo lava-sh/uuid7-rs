@@ -29,6 +29,7 @@ unsafe extern "C" {
         ndigits: pyo3::ffi::Py_ssize_t,
         digits: *mut *mut std::os::raw::c_void,
     ) -> *mut PyLongWriter;
+
     fn PyLongWriter_Finish(writer: *mut PyLongWriter) -> *mut PyObject;
 }
 
@@ -47,6 +48,7 @@ pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
     if writer.is_null() {
         return null_mut();
     }
+
     let d = digits_ptr.cast::<u32>();
     unsafe {
         d.write((lo & MASK) as u32); // bits 0..29

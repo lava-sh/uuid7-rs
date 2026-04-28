@@ -108,25 +108,30 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         return -1;
     }
     let mut bytes = [0u8; 16];
-    #[cfg(Py_3_13)]
-    let rc = unsafe {
-        PyLong_AsNativeBytes(
-            value,
-            bytes.as_mut_ptr().cast::<std::os::raw::c_void>(),
-            16,
-            pyo3::ffi::Py_ASNATIVEBYTES_BIG_ENDIAN | pyo3::ffi::Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
-        )
+    let rc = {
+        #[cfg(Py_3_13)]
+        unsafe {
+            PyLong_AsNativeBytes(
+                value,
+                bytes.as_mut_ptr().cast::<std::os::raw::c_void>(),
+                16,
+                pyo3::ffi::Py_ASNATIVEBYTES_BIG_ENDIAN
+                    | pyo3::ffi::Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
+            )
+        }
+
+        #[cfg(not(Py_3_13))]
+        unsafe {
+            PyLong_AsNativeBytes(
+                value.cast::<pyo3::ffi::PyLongObject>(),
+                bytes.as_mut_ptr().cast::<std::os::raw::c_uchar>(),
+                16,
+                0,
+                0,
+            )
+        }
     };
-    #[cfg(not(Py_3_13))]
-    let rc = unsafe {
-        PyLong_AsNativeBytes(
-            value.cast::<pyo3::ffi::PyLongObject>(),
-            bytes.as_mut_ptr().cast::<std::os::raw::c_uchar>(),
-            16,
-            0,
-            0,
-        )
-    };
+
     if rc < 0 {
         if unsafe { PyErr_ExceptionMatches(PyExc_OverflowError) } != 0 {
             PyValueError::new_err(c"int is out of range (need a 128-bit value)");
