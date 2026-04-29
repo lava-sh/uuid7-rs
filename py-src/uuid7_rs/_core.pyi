@@ -18,7 +18,6 @@ class _UUID:
         bytes_le: builtins.bytes | None = None,
         fields: _FieldsType | None = None,
         int: builtins.int | None = None,  # noqa: A002
-        version: builtins.int | None = None,
     ) -> None: ...
     @property
     def bytes(self) -> builtins.bytes: ...
