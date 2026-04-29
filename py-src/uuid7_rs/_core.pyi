@@ -1,27 +1,25 @@
 import builtins
 from typing import Any, Final, Literal, NoReturn, TypeAlias
 
-from typing_extensions import Self, overload
-
 # https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/_typeshed/__init__.pyi#L52-L53
 Unused: TypeAlias = object
 
 _FieldsType: TypeAlias = tuple[int, int, int, int, int, int]
 
 class _UUID:
+    # https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/uuid.pyi#L18
     int: Final[builtins.int]
 
-    @overload
-    def __new__(cls, hex: str | _UUID, /) -> Self: ...
-    @overload
-    def __new__(cls, *, bytes: builtins.bytes) -> Self: ...
-    @overload
-    def __new__(cls, *, bytes_le: builtins.bytes) -> Self: ...
-    @overload
-    def __new__(cls, *, fields: _FieldsType) -> Self: ...
-    @overload
-    def __new__(cls, *, int: builtins.int) -> Self: ...
-    # https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/uuid.pyi#L31-L56
+    # https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/uuid.pyi#L20-L56
+    def __init__(
+        self,
+        hex: str | None = None,  # noqa: A002
+        bytes: builtins.bytes | None = None,  # noqa: A002
+        bytes_le: builtins.bytes | None = None,
+        fields: _FieldsType | None = None,
+        int: builtins.int | None = None,  # noqa: A002
+        version: builtins.int | None = None,
+    ) -> None: ...
     @property
     def bytes(self) -> builtins.bytes: ...
     @property
@@ -50,6 +48,9 @@ class _UUID:
     def timestamp(self) -> builtins.int: ...
     @property
     def urn(self) -> str: ...
+    # https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/uuid.pyi#L59-L60
+    @property
+    def version(self) -> builtins.int: ...
     # https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/uuid.pyi#L61-L68
     def __int__(self) -> builtins.int: ...
     def __eq__(self, other: object) -> bool: ...
@@ -83,7 +84,7 @@ _MAX: Final[_UUID]
 def _uuid7(
     timestamp: int | None = None,
     nanos: int | None = None,
-    mode: Literal["fast", "secure"] = "fast",
+    mode: Literal["fast", "secure"] | None = "fast",
 ) -> _UUID:
     """
     Generate a UUIDv7 object.
@@ -116,7 +117,7 @@ def _uuid7(
 def _uuid7_int(
     timestamp: int | None = None,
     nanos: int | None = None,
-    mode: Literal["fast", "secure"] = "fast",
+    mode: Literal["fast", "secure"] | None = "fast",
 ) -> builtins.int:
     ...
 
