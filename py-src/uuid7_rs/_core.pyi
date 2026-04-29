@@ -113,6 +113,13 @@ def _uuid7(
 
     """
 
+def _uuid7_int(
+    timestamp: int | None = None,
+    nanos: int | None = None,
+    mode: Literal["fast", "secure"] = "fast",
+) -> builtins.int:
+    ...
+
 def _reseed_rng() -> None: ...
 
 _VERSION: str

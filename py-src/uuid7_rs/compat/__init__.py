@@ -7,7 +7,7 @@ __all__ = (
 from typing import Final, Literal
 from uuid import UUID, SafeUUID
 
-from uuid7_rs._core import _uuid7
+from uuid7_rs._core import _uuid7_int
 
 NIL: Final[UUID] = UUID("00000000-0000-0000-0000-000000000000")
 MAX: Final[UUID] = UUID("ffffffff-ffff-ffff-ffff-ffffffffffff")
@@ -52,5 +52,4 @@ def uuid7(
         A UUIDv7 object.
 
     """
-    uuid7_int = _uuid7(timestamp, nanos, mode).int
-    return from_int(uuid7_int)
+    return from_int(_uuid7_int(timestamp, nanos, mode))
