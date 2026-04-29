@@ -27,7 +27,7 @@ use crate::{
         dunder::{__copy__, __hash__, __repr__, __str__, richcompare},
         property::{
             bytes, bytes_le, clock_seq_hi_variant, clock_seq_low, fields, get_clock_seq, hex, int,
-            node, time, time_hi_version, time_low, time_mid, urn, version,
+            node, time, time_hi_version, time_low, time_mid, urn,
         },
         uuid_obj::UUIDObject,
     },
@@ -229,7 +229,7 @@ macro_rules! getset {
     };
 }
 
-static mut UUID_GETSET: [PyGetSetDef; 16] = [
+static mut UUID_GETSET: [PyGetSetDef; 15] = [
     getset!(c"bytes", bytes),
     getset!(c"bytes_le", bytes_le),
     getset!(c"clock_seq", get_clock_seq),
@@ -244,7 +244,6 @@ static mut UUID_GETSET: [PyGetSetDef; 16] = [
     getset!(c"time_low", time_low),
     getset!(c"time_mid", time_mid),
     getset!(c"urn", urn),
-    getset!(c"version", version),
     PyGetSetDef {
         name: ptr::null(),
         get: None,

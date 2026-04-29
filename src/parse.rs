@@ -88,7 +88,11 @@ pub fn parse_uuid_bytes(value: *mut PyObject, le: bool, hi: &mut u64, lo: &mut u
         return -1;
     }
     if len != 16 {
-        PyValueError::new_err(c"bytes is not a 16-char string");
+        if le {
+            PyValueError::new_err(c"bytes_le is not a 16-char string");
+        } else {
+            PyValueError::new_err(c"bytes is not a 16-char string");
+        }
         return -1;
     }
     let p = buf as *const u8;
