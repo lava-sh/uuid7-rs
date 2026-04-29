@@ -12,8 +12,8 @@ use pyo3::{
         Py_ssize_t, Py_tp_dealloc, Py_tp_free, Py_tp_getset, Py_tp_hash, Py_tp_methods, Py_tp_new,
         Py_tp_repr, Py_tp_richcompare, Py_tp_str, PyDict_Next, PyErr_Format, PyExc_TypeError,
         PyGetSetDef, PyMethodDef, PyMethodDefPointer, PyModule_AddObjectRef, PyObject,
-        PyObject_Free, PyObject_New, PyObject_TypeCheck, PyType_FromSpec, PyType_Slot, PyType_Spec,
-        PyTypeObject, PyUnicode_CompareWithASCIIString,
+        PyObject_Free, PyObject_New, PyType_FromSpec, PyType_Slot, PyType_Spec, PyTypeObject,
+        PyUnicode_CompareWithASCIIString,
     },
 };
 
@@ -171,12 +171,6 @@ pub extern "C" fn uuid_type_new(
             c"one of the hex, bytes, bytes_le, fields, or int arguments must be given",
         );
         return ptr::null_mut();
-    }
-    unsafe {
-        if PyObject_TypeCheck(hex_obj, UUID_PTR) != 0 {
-            Py_INCREF(hex_obj);
-            return hex_obj;
-        }
     }
 
     let (mut hi, mut lo) = (0u64, 0u64);

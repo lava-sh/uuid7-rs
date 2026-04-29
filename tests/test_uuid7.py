@@ -128,9 +128,11 @@ def test_uuid_constructor_rejects_int_overflow() -> None:
         uuid7_rs.UUID(int=1 << 200)
 
 
-def test_uuid_constructor_returns_same_object_for_uuid_input() -> None:
+def test_uuid_constructor_rejects_uuid_input_like_stdlib() -> None:
     uuid_ = uuid7_rs.uuid7()
-    assert uuid7_rs.UUID(uuid_) is uuid_
+    constructor = cast(Any, uuid7_rs.UUID)
+    with pytest.raises(TypeError, match=r"UUID\(\) argument must be a str"):
+        constructor(uuid_)
 
 
 def test_uuid_constructor_requires_exactly_one_input_form() -> None:
