@@ -1,9 +1,11 @@
-use std::ptr::addr_of_mut;
+use std::{
+    ptr::addr_of_mut,
+    sync::atomic::{AtomicU64, Ordering},
+};
 
 use crate::windows::win_api::{FILETIME, GetSystemTimePreciseAsFileTime, QueryInterruptTime};
 
-static mut EPOCH_BASE_MS: u64 = 0;
-static mut TICK_BASE_MS: u64 = 0;
+static EPOCH_OFFSET_MS: AtomicU64 = AtomicU64::new(0);
 
 #[inline]
 fn system_ms() -> u64 {
@@ -26,13 +28,9 @@ fn now() -> u64 {
 
 #[inline]
 pub fn now_ms() -> u64 {
-    let now = now();
-    unsafe { EPOCH_BASE_MS + now - TICK_BASE_MS }
+    now() + EPOCH_OFFSET_MS.load(Ordering::Relaxed)
 }
 
 pub fn platform_seeded() {
-    unsafe {
-        EPOCH_BASE_MS = system_ms();
-        TICK_BASE_MS = now();
-    }
+    EPOCH_OFFSET_MS.store(system_ms() - now(), Ordering::Relaxed);
 }
