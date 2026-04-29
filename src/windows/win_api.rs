@@ -1,4 +1,4 @@
-#![allow(non_snake_case, clippy::upper_case_acronyms)]
+#![expect(non_snake_case, clippy::upper_case_acronyms)]
 
 #[repr(C)]
 #[derive(Default)]

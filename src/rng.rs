@@ -2,13 +2,9 @@ use std::os::raw::c_int;
 
 use crate::python::exceptions::{PyOSError, PyValueError};
 #[cfg(unix)]
-pub use crate::unix::time::now_ms;
+pub use crate::unix::time::{now_ms, platform_seeded};
 #[cfg(windows)]
 pub use crate::windows::time::{now_ms, platform_seeded};
-
-#[cfg(unix)]
-#[inline]
-pub fn platform_seeded() {}
 
 const C: u64 = 0xd07e_bc63_2746_54c7;
 const MASK42: u64 = (1u64 << 42) - 1;
@@ -139,19 +135,19 @@ pub fn build_words(ts_ms: u64, rand_a: u16, tail62: u64) -> (u64, u64) {
 }
 
 #[inline]
-pub fn build_uuid7_default(hi: &mut u64, lo: &mut u64) -> c_int {
+pub fn build_uuid7_default(high: &mut u64, low: &mut u64) -> c_int {
     if ensure_seeded() != 0 {
         return -1;
     }
     let (mut ts, mut ra, mut t62) = (0u64, 0u16, 0u64);
     advance_monotonic_with(now_ms(), &mut ts, &mut ra, &mut t62, || Ok(w1rand()));
-    let (h, l) = build_words(ts, ra, t62);
-    *hi = h;
-    *lo = l;
+    let (hi, lo) = build_words(ts, ra, t62);
+    *high = hi;
+    *low = lo;
     0
 }
 
-pub fn build_uuid7_default_secure(hi: &mut u64, lo: &mut u64) -> c_int {
+pub fn build_uuid7_default_secure(high: &mut u64, low: &mut u64) -> c_int {
     if ensure_seeded() != 0 {
         return -1;
     }
@@ -161,9 +157,9 @@ pub fn build_uuid7_default_secure(hi: &mut u64, lo: &mut u64) -> c_int {
         return -1;
     }
 
-    let (h, l) = build_words(ts, ra, t62);
-    *hi = h;
-    *lo = l;
+    let (hi, lo) = build_words(ts, ra, t62);
+    *high = hi;
+    *low = lo;
     0
 }
 
@@ -205,8 +201,8 @@ pub fn build_uuid7_with_args(
     has_ts: bool,
     nanos: u64,
     has_nanos: bool,
-    hi: &mut u64,
-    lo: &mut u64,
+    high: &mut u64,
+    low: &mut u64,
 ) -> c_int {
     if ensure_seeded() != 0 {
         return -1;
@@ -215,15 +211,15 @@ pub fn build_uuid7_with_args(
     let state =
         extract_random_bits_with(has_ts, has_nanos, nanos, &mut ra, &mut t62, || Ok(w1rand()));
 
-    let (h, l) = if state > 0 {
+    let (hi, lo) = if state > 0 {
         let mut ms = ts_ms;
         advance_monotonic_with(ms, &mut ms, &mut ra, &mut t62, || Ok(w1rand()));
         build_words(ms, ra, t62)
     } else {
         build_words(ts_ms, ra, t62)
     };
-    *hi = h;
-    *lo = l;
+    *high = hi;
+    *low = lo;
     0
 }
 
@@ -232,8 +228,8 @@ pub fn build_uuid7_with_args_secure(
     has_ts: bool,
     nanos: u64,
     has_nanos: bool,
-    hi: &mut u64,
-    lo: &mut u64,
+    high: &mut u64,
+    low: &mut u64,
 ) -> c_int {
     if ensure_seeded() != 0 {
         return -1;
@@ -247,7 +243,7 @@ pub fn build_uuid7_with_args_secure(
         return -1;
     }
 
-    let (h, l) = if state > 0 {
+    let (hi, lo) = if state > 0 {
         let mut ms = ts_ms;
         if advance_monotonic_with(ms, &mut ms, &mut ra, &mut t62, rnd_u64_secure) != 0 {
             return -1;
@@ -257,21 +253,21 @@ pub fn build_uuid7_with_args_secure(
         build_words(ts_ms, ra, t62)
     };
 
-    *hi = h;
-    *lo = l;
+    *high = hi;
+    *low = lo;
     0
 }
 
 #[inline]
 pub fn build_timestamp_ms(ts_s: u64, has_ts: bool, nanos: u64, has_nanos: bool) -> Result<u64, ()> {
-    const V7_MAX_TS_MS: u64 = 0xFFFF_FFFF_FFFF;
-    const V7_MAX_TS_S: u64 = V7_MAX_TS_MS / 1000;
+    const MAX_TS_MS: u64 = 0xFFFF_FFFF_FFFF;
+    const MAX_TS_S: u64 = MAX_TS_MS / 1000;
 
     if !has_ts {
         return Ok(now_ms());
     }
 
-    if ts_s > V7_MAX_TS_S {
+    if ts_s > MAX_TS_S {
         PyValueError::new_err(c"timestamp is too large");
         return Err(());
     }
@@ -282,7 +278,7 @@ pub fn build_timestamp_ms(ts_s: u64, has_ts: bool, nanos: u64, has_nanos: bool) 
         ms += nanos / 1_000_000;
     }
 
-    if ms > V7_MAX_TS_MS {
+    if ms > MAX_TS_MS {
         PyValueError::new_err(c"timestamp is too large");
         return Err(());
     }
