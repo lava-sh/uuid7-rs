@@ -36,7 +36,7 @@ macro_rules! u32_getter {
 }
 
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L370-L387
-u64_getter!(timestamp, |obj: &UUIDObject| obj.hi >> 16);
+u64_getter!(time, |obj: &UUIDObject| obj.hi >> 16);
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L394-L396
 u64_getter!(node, |obj: &UUIDObject| obj.lo & 0xFFFF_FFFF_FFFF);
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L350-L352

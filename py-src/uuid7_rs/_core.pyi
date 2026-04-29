@@ -44,8 +44,6 @@ class _UUID:
     @property
     def time_mid(self) -> builtins.int: ...
     @property
-    def timestamp(self) -> builtins.int: ...
-    @property
     def urn(self) -> str: ...
     # https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/uuid.pyi#L59-L60
     @property
@@ -122,4 +120,4 @@ def _uuid7_int(
 
 def _reseed_rng() -> None: ...
 
-_VERSION: str
+_VERSION: Final[str]
