@@ -16,3 +16,6 @@ pub fn now_ms() -> u64 {
         (ts.tv_sec.cast_unsigned() as u64 * 1000) + (ts.tv_nsec.cast_unsigned() as u64 / 1_000_000)
     }
 }
+
+#[inline]
+pub fn platform_seeded() {}
