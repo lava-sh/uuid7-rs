@@ -111,14 +111,26 @@ pub extern "C" fn fields(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject 
         return ptr::null_mut();
     }
 
-    for (idx, value) in obj.fields().into_iter().enumerate() {
-        unsafe {
-            PyTuple_SET_ITEM(
-                py_tuple,
-                idx.cast_signed(),
-                PyLong_FromUnsignedLongLong(value),
-            );
-        }
+    let [
+        time_low,
+        time_mid,
+        time_hi_version,
+        clock_seq_hi_variant,
+        clock_seq_low,
+        node,
+    ] = obj.fields();
+
+    unsafe {
+        PyTuple_SET_ITEM(py_tuple, 0, PyLong_FromUnsignedLongLong(time_low));
+        PyTuple_SET_ITEM(py_tuple, 1, PyLong_FromUnsignedLongLong(time_mid));
+        PyTuple_SET_ITEM(py_tuple, 2, PyLong_FromUnsignedLongLong(time_hi_version));
+        PyTuple_SET_ITEM(
+            py_tuple,
+            3,
+            PyLong_FromUnsignedLongLong(clock_seq_hi_variant),
+        );
+        PyTuple_SET_ITEM(py_tuple, 4, PyLong_FromUnsignedLongLong(clock_seq_low));
+        PyTuple_SET_ITEM(py_tuple, 5, PyLong_FromUnsignedLongLong(node));
     }
 
     py_tuple
