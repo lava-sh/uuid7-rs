@@ -22,12 +22,18 @@ macro_rules! getter {
             unsafe { PyLong_FromUnsignedLong($method(obj) as c_ulong) }
         }
     };
+    ($name:ident, $method:path, u64) => {
+        pub extern "C" fn $name(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
+            let obj = UUIDObject::from_self(self_);
+            unsafe { PyLong_FromUnsignedLongLong($method(obj)) }
+        }
+    };
 }
 
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L370-L387
-getter!(time, UUIDObject::time);
+getter!(time, UUIDObject::time, u64);
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L394-L396
-getter!(node, UUIDObject::node);
+getter!(node, UUIDObject::node, u64);
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L350-L352
 getter!(time_low, UUIDObject::time_low);
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L354-L356
