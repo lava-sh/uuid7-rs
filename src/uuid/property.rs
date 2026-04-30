@@ -19,7 +19,7 @@ macro_rules! getter {
     ($name:ident, $method:path) => {
         pub extern "C" fn $name(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
             let obj = UUIDObject::from_self(self_);
-            unsafe { PyLong_FromUnsignedLongLong($method(obj)) }
+            unsafe { PyLong_FromUnsignedLong($method(obj) as c_ulong) }
         }
     };
 }
