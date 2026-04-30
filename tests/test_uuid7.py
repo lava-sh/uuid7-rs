@@ -147,6 +147,26 @@ def test_uuid_constructor(c: Callable[[], uuid7_rs.UUID]) -> None:
             TypeError,
             e("UUID() takes at most 1 positional argument"),
         ),
+        (
+            lambda: uuid7_rs.UUID(bytes="bad"),  # ty: ignore[invalid-argument-type]
+            ValueError,
+            "bytes is not a 16-char string",
+        ),
+        (
+            lambda: uuid7_rs.UUID(bytes_le="bad"),  # ty: ignore[invalid-argument-type]
+            ValueError,
+            "bytes_le is not a 16-char string",
+        ),
+        (
+            lambda: uuid7_rs.UUID(bytes=bytearray(b"0" * 16)),  # ty: ignore[invalid-argument-type]
+            TypeError,
+            "bytes is not a 16-char bytes object",
+        ),
+        (
+            lambda: uuid7_rs.UUID(bytes_le=bytearray(b"0" * 16)),  # ty: ignore[invalid-argument-type]
+            TypeError,
+            "bytes_le is not a 16-char bytes object",
+        ),
     ],
 )
 def test_uuid_constructor_errors(
