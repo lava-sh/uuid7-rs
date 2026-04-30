@@ -1,14 +1,11 @@
 use std::{
-    os::raw::{c_char, c_ulong, c_void},
+    os::raw::{c_char, c_void},
     ptr,
 };
 
 use pyo3::ffi::{
-    Py_ssize_t, PyBytes_FromStringAndSize, PyLong_FromUnsignedLong, PyLong_FromUnsignedLongLong,
-    PyObject, PyTuple_New,
+    Py_ssize_t, PyBytes_FromStringAndSize, PyLong_FromUnsignedLongLong, PyObject, PyTuple_New,
 };
-#[cfg(not(PyPy))]
-use pyo3::ffi::{PyUnicode_1BYTE_DATA, PyUnicode_New};
 
 use crate::{
     hex::helpers::{fmt_dashed, fmt_hex32},
@@ -17,43 +14,36 @@ use crate::{
     uuid::uuid_obj::UUIDObject,
 };
 
-macro_rules! u64_getter {
-    ($name:ident, $expr:expr) => {
+macro_rules! getter {
+    ($name:ident, $method:path) => {
         pub extern "C" fn $name(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
             let obj = UUIDObject::from_self(self_);
-            unsafe { PyLong_FromUnsignedLongLong($expr(obj)) }
-        }
-    };
-}
-
-macro_rules! u32_getter {
-    ($name:ident, $expr:expr) => {
-        pub extern "C" fn $name(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
-            let obj = UUIDObject::from_self(self_);
-            unsafe { PyLong_FromUnsignedLong($expr(obj) as c_ulong) }
+            unsafe { PyLong_FromUnsignedLongLong($method(obj)) }
         }
     };
 }
 
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L370-L387
-u64_getter!(time, |obj: &UUIDObject| obj.hi >> 16);
+getter!(time, UUIDObject::time);
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L394-L396
-u64_getter!(node, |obj: &UUIDObject| obj.lo & 0xFFFF_FFFF_FFFF);
+getter!(node, UUIDObject::node);
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L350-L352
-u32_getter!(time_low, |obj: &UUIDObject| obj.hi >> 32);
+getter!(time_low, UUIDObject::time_low);
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L354-L356
-u32_getter!(time_mid, |obj: &UUIDObject| (obj.hi >> 16) & 0xFFFF);
+getter!(time_mid, UUIDObject::time_mid);
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L358-L360
-u32_getter!(time_hi_version, |obj: &UUIDObject| obj.hi & 0xFFFF);
+getter!(time_hi_version, UUIDObject::time_hi_version);
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L362-L364
-u32_getter!(clock_seq_hi_variant, |obj: &UUIDObject| obj.lo >> 56);
+getter!(clock_seq_hi_variant, UUIDObject::clock_seq_hi_variant);
 // https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L366-L368
-u32_getter!(clock_seq_low, |obj: &UUIDObject| (obj.lo >> 48) & 0xFF);
+getter!(clock_seq_low, UUIDObject::clock_seq_low);
 
 #[inline]
 pub fn with_buf(len: Py_ssize_t, f: impl FnOnce(&mut [u8])) -> *mut PyObject {
     #[cfg(not(PyPy))]
     {
+        use pyo3::ffi::{PyUnicode_1BYTE_DATA, PyUnicode_New};
+
         let py_str = unsafe { PyUnicode_New(len, 127) };
         if py_str.is_null() {
             return ptr::null_mut();
@@ -120,44 +110,21 @@ pub extern "C" fn fields(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject 
     if py_tuple.is_null() {
         return ptr::null_mut();
     }
-    unsafe {
-        PyTuple_SET_ITEM(
-            py_tuple,
-            0,
-            PyLong_FromUnsignedLong((obj.hi >> 32) as c_ulong),
-        );
-        PyTuple_SET_ITEM(
-            py_tuple,
-            1,
-            PyLong_FromUnsignedLong(((obj.hi >> 16) & 0xFFFF) as c_ulong),
-        );
-        PyTuple_SET_ITEM(
-            py_tuple,
-            2,
-            PyLong_FromUnsignedLong((obj.hi & 0xFFFF) as c_ulong),
-        );
-        PyTuple_SET_ITEM(
-            py_tuple,
-            3,
-            PyLong_FromUnsignedLong((obj.lo >> 56) as c_ulong),
-        );
-        PyTuple_SET_ITEM(
-            py_tuple,
-            4,
-            PyLong_FromUnsignedLong(((obj.lo >> 48) & 0xFF) as c_ulong),
-        );
-        PyTuple_SET_ITEM(
-            py_tuple,
-            5,
-            PyLong_FromUnsignedLongLong(obj.lo & 0xFFFF_FFFF_FFFF),
-        );
+
+    for (idx, value) in obj.fields().into_iter().enumerate() {
+        unsafe {
+            PyTuple_SET_ITEM(
+                py_tuple,
+                idx.cast_signed(),
+                PyLong_FromUnsignedLongLong(value),
+            );
+        }
     }
+
     py_tuple
 }
 
 pub extern "C" fn get_clock_seq(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
     let obj = UUIDObject::from_self(self_);
-    let hi = ((obj.lo >> 56) & 0x3F) as u32;
-    let lo = ((obj.lo >> 48) & 0xFF) as u32;
-    unsafe { PyLong_FromUnsignedLong(c_ulong::from((hi << 8) | lo)) }
+    unsafe { PyLong_FromUnsignedLongLong(obj.clock_seq()) }
 }
