@@ -5,10 +5,9 @@ use std::{
 };
 
 use pyo3::ffi::{
-    Py_DECREF, Py_None, Py_ssize_t, PyBytes_AsStringAndSize, PyErr_Clear, PyErr_ExceptionMatches,
-    PyErr_Format, PyErr_Occurred, PyExc_OverflowError, PyExc_TypeError, PyLong_AsUnsignedLongLong,
-    PyLong_Check, PyObject, PySequence_Fast, PySequence_Size, PyUnicode_AsUTF8AndSize,
-    PyUnicode_Check,
+    Py_DECREF, Py_None, Py_ssize_t, PyBytes_AsStringAndSize, PyErr_Clear, PyErr_Format,
+    PyErr_Occurred, PyExc_TypeError, PyLong_AsUnsignedLongLong, PyLong_Check, PyObject,
+    PySequence_Fast, PySequence_Size, PyUnicode_AsUTF8AndSize, PyUnicode_Check,
 };
 
 use crate::{
@@ -120,7 +119,8 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
                 bytes.as_mut_ptr().cast::<std::os::raw::c_void>(),
                 16,
                 pyo3::ffi::Py_ASNATIVEBYTES_BIG_ENDIAN
-                    | pyo3::ffi::Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
+                    | pyo3::ffi::Py_ASNATIVEBYTES_UNSIGNED_BUFFER
+                    | pyo3::ffi::Py_ASNATIVEBYTES_REJECT_NEGATIVE,
             )
         }
 
@@ -136,14 +136,12 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         }
     };
 
-    if rc < 0 {
-        if unsafe { PyErr_ExceptionMatches(PyExc_OverflowError) } != 0 {
-            PyValueError::new_err(c"int is out of range (need a 128-bit value)");
-        }
-        return -1;
-    }
     #[cfg(Py_3_13)]
-    if rc > 16 {
+    let out_of_range = !(0..=16).contains(&rc);
+    #[cfg(not(Py_3_13))]
+    let out_of_range = rc < 0;
+    if out_of_range {
+        unsafe { PyErr_Clear() };
         PyValueError::new_err(c"int is out of range (need a 128-bit value)");
         return -1;
     }

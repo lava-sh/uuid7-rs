@@ -6,6 +6,7 @@ import os
 import sys
 import uuid
 from collections.abc import Callable
+from re import escape as e
 from typing import Any, Literal, TypeAlias
 
 import pytest
@@ -118,7 +119,7 @@ def test_uuid_constructor(c: Callable[[], uuid7_rs.UUID]) -> None:
         (
             lambda: uuid7_rs.UUID(uuid7_rs.uuid7()),  # ty: ignore[invalid-argument-type]
             TypeError,
-            r"UUID\(\) argument must be a str",
+            e("UUID() argument must be a str"),
         ),
         (
             lambda: uuid7_rs.UUID(),
@@ -134,12 +135,17 @@ def test_uuid_constructor(c: Callable[[], uuid7_rs.UUID]) -> None:
             "one of the hex, bytes, bytes_le, fields, or int",
         ),
         (
+            lambda: uuid7_rs.UUID(int=-1),
+            ValueError,
+            e("int is out of range (need a 128-bit value)"),
+        ),
+        (
             lambda: uuid7_rs.UUID(
                 "00000000-0000-0000-0000-000000000000",
                 b"\x00" * 16,
             ),
             TypeError,
-            r"UUID\(\) takes at most 1 positional argument",
+            e("UUID() takes at most 1 positional argument"),
         ),
     ],
 )
@@ -280,7 +286,7 @@ def test_uuid7_accepts_valid_nanos_bounds(nanos: int) -> None:
 @pytest.mark.parametrize(
     ("kwargs", "err_type", "err_msg"),
     [
-        ({"nanos": 1_000_000_000}, ValueError, r"nanos must be in range 0\.\.999999999"),
+        ({"nanos": 1_000_000_000}, ValueError, e("nanos must be in range 0..999999999")),
         ({"timestamp": -1}, TypeError, "timestamp must be a non-negative int or None"),
         ({"nanos": -1}, TypeError, "nanos must be a non-negative int or None"),
         ({"timestamp": "bad"}, TypeError, "timestamp must be a non-negative int or None"),
