@@ -53,16 +53,4 @@ impl UUIDObject {
     pub fn node(&self) -> u64 {
         self.lo & 0xFFFF_FFFF_FFFF
     }
-
-    #[inline]
-    pub fn fields(&self) -> [u64; 6] {
-        [
-            self.time_low(),
-            self.time_mid(),
-            self.time_hi_version(),
-            self.clock_seq_hi_variant(),
-            self.clock_seq_low(),
-            self.node(),
-        ]
-    }
 }

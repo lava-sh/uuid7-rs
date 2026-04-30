@@ -1,10 +1,11 @@
 use std::{
-    os::raw::{c_char, c_void},
+    os::raw::{c_char, c_ulong, c_void},
     ptr,
 };
 
 use pyo3::ffi::{
-    Py_ssize_t, PyBytes_FromStringAndSize, PyLong_FromUnsignedLongLong, PyObject, PyTuple_New,
+    Py_ssize_t, PyBytes_FromStringAndSize, PyLong_FromUnsignedLong, PyLong_FromUnsignedLongLong,
+    PyObject, PyTuple_New,
 };
 
 use crate::{
@@ -107,30 +108,38 @@ pub extern "C" fn urn(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
 pub extern "C" fn fields(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
     let obj = UUIDObject::from_self(self_);
     let py_tuple = unsafe { PyTuple_New(6) };
+
     if py_tuple.is_null() {
         return ptr::null_mut();
     }
 
-    let [
-        time_low,
-        time_mid,
-        time_hi_version,
-        clock_seq_hi_variant,
-        clock_seq_low,
-        node,
-    ] = obj.fields();
-
     unsafe {
-        PyTuple_SET_ITEM(py_tuple, 0, PyLong_FromUnsignedLongLong(time_low));
-        PyTuple_SET_ITEM(py_tuple, 1, PyLong_FromUnsignedLongLong(time_mid));
-        PyTuple_SET_ITEM(py_tuple, 2, PyLong_FromUnsignedLongLong(time_hi_version));
+        PyTuple_SET_ITEM(
+            py_tuple,
+            0,
+            PyLong_FromUnsignedLong(obj.time_low() as c_ulong),
+        );
+        PyTuple_SET_ITEM(
+            py_tuple,
+            1,
+            PyLong_FromUnsignedLong(obj.time_mid() as c_ulong),
+        );
+        PyTuple_SET_ITEM(
+            py_tuple,
+            2,
+            PyLong_FromUnsignedLong(obj.time_hi_version() as c_ulong),
+        );
         PyTuple_SET_ITEM(
             py_tuple,
             3,
-            PyLong_FromUnsignedLongLong(clock_seq_hi_variant),
+            PyLong_FromUnsignedLong(obj.clock_seq_hi_variant() as c_ulong),
         );
-        PyTuple_SET_ITEM(py_tuple, 4, PyLong_FromUnsignedLongLong(clock_seq_low));
-        PyTuple_SET_ITEM(py_tuple, 5, PyLong_FromUnsignedLongLong(node));
+        PyTuple_SET_ITEM(
+            py_tuple,
+            4,
+            PyLong_FromUnsignedLong(obj.clock_seq_low() as c_ulong),
+        );
+        PyTuple_SET_ITEM(py_tuple, 5, PyLong_FromUnsignedLongLong(obj.node()));
     }
 
     py_tuple
