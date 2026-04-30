@@ -31,7 +31,7 @@ pub extern "C" fn __repr__(self_: *mut PyObject) -> *mut PyObject {
 #[expect(clippy::cast_possible_wrap)]
 pub extern "C" fn __hash__(self_: *mut PyObject) -> Py_hash_t {
     let obj = UUIDObject::from_self(self_);
-    let h = (obj.hi ^ (obj.hi >> 32) ^ obj.lo ^ (obj.lo >> 32)) as Py_hash_t;
+    let h = (obj.hi ^ (obj.time_low()) ^ obj.lo ^ (obj.lo >> 32)) as Py_hash_t;
     if h == -1 { -2 } else { h }
 }
 
@@ -51,10 +51,10 @@ pub extern "C" fn richcompare(a: *mut PyObject, b: *mut PyObject, op: c_int) -> 
         }
     }
 
-    let la = unsafe { &*(a as *const UUIDObject) };
-    let lb = unsafe { &*(b as *const UUIDObject) };
+    let a_ = UUIDObject::from_self(a);
+    let b_ = UUIDObject::from_self(b);
 
-    let ordering = (la.hi, la.lo).cmp(&(lb.hi, lb.lo));
+    let ordering = (a_.hi, a_.lo).cmp(&(b_.hi, b_.lo));
 
     let result = match op {
         Py_EQ => ordering.is_eq(),

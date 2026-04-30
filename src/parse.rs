@@ -7,7 +7,7 @@ use std::{
 use pyo3::ffi::{
     Py_DECREF, Py_None, Py_ssize_t, PyBytes_AsStringAndSize, PyErr_Clear, PyErr_Format,
     PyErr_Occurred, PyExc_TypeError, PyLong_AsUnsignedLongLong, PyLong_Check, PyObject,
-    PySequence_Fast, PySequence_Size, PyUnicode_AsUTF8AndSize, PyUnicode_Check,
+    PyObject_Length, PySequence_Fast, PySequence_Size, PyUnicode_AsUTF8AndSize, PyUnicode_Check,
 };
 
 use crate::{
@@ -80,27 +80,44 @@ pub fn parse_uuid(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int {
 }
 
 pub fn parse_uuid_bytes(value: *mut PyObject, le: bool, hi: &mut u64, lo: &mut u64) -> c_int {
+    let len = unsafe { PyObject_Length(value) };
+
+    if len < 0 {
+        return -1;
+    }
+
+    if len != 16 {
+        let msg = if le {
+            c"bytes_le is not a 16-char string"
+        } else {
+            c"bytes is not a 16-char string"
+        };
+        PyValueError::new_err(msg);
+        return -1;
+    }
+
     let mut buf: *mut c_char = null_mut();
     let mut len: Py_ssize_t = 0;
+
     if unsafe { PyBytes_AsStringAndSize(value, addr_of_mut!(buf), addr_of_mut!(len)) } != 0 {
-        PyTypeError::new_err(c"bytes must be a 16-char bytes object");
-        return -1;
-    }
-    if len != 16 {
-        if le {
-            PyValueError::new_err(c"bytes_le is not a 16-char string");
+        unsafe { PyErr_Clear() };
+        let msg = if le {
+            c"bytes_le is not a 16-char bytes object"
         } else {
-            PyValueError::new_err(c"bytes is not a 16-char string");
-        }
+            c"bytes is not a 16-char bytes object"
+        };
+        PyTypeError::new_err(msg);
         return -1;
     }
-    let p = buf as *const u8;
+
+    let ptr = buf as *const u8;
+
     if le {
         let mut reordered = [0u8; 16];
-        uuid_to_bytes_le_ptr(p, reordered.as_mut_ptr());
+        uuid_to_bytes_le_ptr(ptr, reordered.as_mut_ptr());
         bytes_to_hilo(reordered.as_ptr(), hi, lo);
     } else {
-        bytes_to_hilo(p, hi, lo);
+        bytes_to_hilo(ptr, hi, lo);
     }
     0
 }

@@ -91,10 +91,8 @@ pub extern "C" fn dealloc(obj: *mut PyObject) {
 }
 
 pub extern "C" fn uuid_nb_int(self_: *mut PyObject) -> *mut PyObject {
-    unsafe {
-        let obj = &*(self_ as *const UUIDObject);
-        uuid_int_from_parts(obj.hi, obj.lo)
-    }
+    let obj = UUIDObject::from_self(self_);
+    uuid_int_from_parts(obj.hi, obj.lo)
 }
 
 pub extern "C" fn uuid_type_new(
