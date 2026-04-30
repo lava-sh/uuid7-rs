@@ -12,8 +12,8 @@ use pyo3::{
         Py_ssize_t, Py_tp_dealloc, Py_tp_free, Py_tp_getset, Py_tp_hash, Py_tp_methods, Py_tp_new,
         Py_tp_repr, Py_tp_richcompare, Py_tp_str, PyDict_Next, PyErr_Format, PyExc_TypeError,
         PyGetSetDef, PyMethodDef, PyMethodDefPointer, PyModule_AddObjectRef, PyObject,
-        PyObject_Free, PyObject_New, PyObject_TypeCheck, PyType_FromSpec, PyType_Slot, PyType_Spec,
-        PyTypeObject, PyUnicode_CompareWithASCIIString,
+        PyObject_Free, PyObject_New, PyType_FromSpec, PyType_Slot, PyType_Spec, PyTypeObject,
+        PyUnicode_CompareWithASCIIString,
     },
 };
 
@@ -27,7 +27,7 @@ use crate::{
         dunder::{__copy__, __hash__, __repr__, __str__, richcompare},
         property::{
             bytes, bytes_le, clock_seq_hi_variant, clock_seq_low, fields, get_clock_seq, hex, int,
-            node, time_hi_version, time_low, time_mid, timestamp, urn, version,
+            node, time, time_hi_version, time_low, time_mid, urn,
         },
         uuid_obj::UUIDObject,
     },
@@ -172,12 +172,6 @@ pub extern "C" fn uuid_type_new(
         );
         return ptr::null_mut();
     }
-    unsafe {
-        if PyObject_TypeCheck(hex_obj, UUID_PTR) != 0 {
-            Py_INCREF(hex_obj);
-            return hex_obj;
-        }
-    }
 
     let (mut hi, mut lo) = (0u64, 0u64);
     if hex_obj != none {
@@ -235,7 +229,7 @@ macro_rules! getset {
     };
 }
 
-static mut UUID_GETSET: [PyGetSetDef; 17] = [
+static mut UUID_GETSET: [PyGetSetDef; 15] = [
     getset!(c"bytes", bytes),
     getset!(c"bytes_le", bytes_le),
     getset!(c"clock_seq", get_clock_seq),
@@ -245,13 +239,11 @@ static mut UUID_GETSET: [PyGetSetDef; 17] = [
     getset!(c"hex", hex),
     getset!(c"int", int),
     getset!(c"node", node),
-    getset!(c"time", timestamp),
+    getset!(c"time", time),
     getset!(c"time_hi_version", time_hi_version),
     getset!(c"time_low", time_low),
     getset!(c"time_mid", time_mid),
-    getset!(c"timestamp", timestamp),
     getset!(c"urn", urn),
-    getset!(c"version", version),
     PyGetSetDef {
         name: ptr::null(),
         get: None,
