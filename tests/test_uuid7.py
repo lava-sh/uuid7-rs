@@ -55,7 +55,7 @@ def _assert_inc(values: list[uuid7_rs.UUID]) -> None:
 
 
 def _assert_timestamp_non_decreasing(values: list[uuid7_rs.UUID]) -> None:
-    timestamps = [value.timestamp for value in values]
+    timestamps = [value.time for value in values]
     assert all(
         left <= right
         for left, right in itertools.pairwise(timestamps)
@@ -188,10 +188,8 @@ def test_uuid7_with_stdlib_uuid() -> None:
 
     if sys.version_info >= (3, 14):
         assert uuid7.time == stdlib_uuid.time
-        assert uuid7.timestamp == stdlib_uuid.time
     else:
         assert uuid7.time == (stdlib_uuid.int >> 80)
-        assert uuid7.timestamp == (stdlib_uuid.int >> 80)
 
     assert uuid7.urn == stdlib_uuid.urn
 
@@ -237,7 +235,7 @@ def test_uuid7_batches(c: Callable[[], uuid7_rs.UUID], size: int) -> None:
 def test_uuid7_explicit_timestamp_batch() -> None:
     values = [uuid7_rs.uuid7(1_704_164_645, 123_000_000) for _ in range(256)]
 
-    assert all(value.timestamp == 1_704_164_645_123 for value in values)
+    assert all(value.time == 1_704_164_645_123 for value in values)
     assert all(value.hex[:12] == values[0].hex[:12] for value in values)
     assert len(set(_uuid_ints(values))) == len(values)
     assert all(((value.int >> 76) & 0xF) == 0x7 for value in values)
@@ -266,7 +264,7 @@ def test_uuid7_timestamp_args(
     #
     # https://datatracker.ietf.org/doc/html/rfc9562#section-5.7
     uuid7 = uuid7_rs.uuid7(args[0], args[1] if len(args) > 1 else None)
-    assert uuid7.timestamp == expected_timestamp
+    assert uuid7.time == expected_timestamp
     _assert_v7(uuid7)
 
 
@@ -350,7 +348,7 @@ def test_uuid7_timestamp_bounds(timestamp: int, expected: int | None) -> None:
     # https://datatracker.ietf.org/doc/html/rfc9562#section-5.7
     uuid7 = uuid7_rs.uuid7(timestamp)
     if expected is not None:
-        assert uuid7.timestamp == expected
+        assert uuid7.time == expected
     _assert_v7(uuid7)
 
 
