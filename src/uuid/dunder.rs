@@ -1,8 +1,11 @@
-use std::ffi::{c_int, c_long};
+use std::{
+    ffi::{CString, c_int},
+    ptr,
+};
 
 use pyo3::ffi::{
-    Py_EQ, Py_GE, Py_GT, Py_INCREF, Py_LE, Py_LT, Py_NE, Py_NotImplemented, Py_TYPE, Py_hash_t,
-    PyBool_FromLong, PyObject,
+    Py_EQ, Py_False, Py_GE, Py_GT, Py_INCREF, Py_LE, Py_LT, Py_NE, Py_NewRef, Py_NotImplemented,
+    Py_TYPE, Py_True, Py_hash_t, PyErr_SetString, PyExc_SystemError, PyObject,
 };
 
 use crate::{
@@ -43,30 +46,44 @@ pub extern "C" fn __copy__(self_: *mut PyObject, _arg: *mut PyObject) -> *mut Py
 }
 
 #[expect(non_upper_case_globals)]
-pub extern "C" fn richcompare(a: *mut PyObject, b: *mut PyObject, op: c_int) -> *mut PyObject {
+pub extern "C" fn richcompare(
+    self_: *mut PyObject,
+    other: *mut PyObject,
+    op: c_int,
+) -> *mut PyObject {
     unsafe {
-        if Py_TYPE(a) != UUID_PTR || Py_TYPE(b) != UUID_PTR {
+        if Py_TYPE(self_) != UUID_PTR || Py_TYPE(other) != UUID_PTR {
             Py_INCREF(Py_NotImplemented());
             return Py_NotImplemented();
         }
     }
 
-    let a_ = UUIDObject::from_self(a);
-    let b_ = UUIDObject::from_self(b);
+    let self_ = UUIDObject::from_self(self_);
+    let other = UUIDObject::from_self(other);
 
-    let ordering = (a_.hi, a_.lo).cmp(&(b_.hi, b_.lo));
+    let ordering = (self_.hi, self_.lo).cmp(&(other.hi, other.lo));
 
-    let result = match op {
-        Py_EQ => ordering.is_eq(),
-        Py_NE => ordering.is_ne(),
+    let cmp = match op {
         Py_LT => ordering.is_lt(),
         Py_LE => ordering.is_le(),
+        Py_EQ => ordering.is_eq(),
+        Py_NE => ordering.is_ne(),
         Py_GT => ordering.is_gt(),
         Py_GE => ordering.is_ge(),
-        _ => unsafe {
-            Py_INCREF(Py_NotImplemented());
-            return Py_NotImplemented();
-        },
+        unrecognized => {
+            let msg = CString::new(&*format!(
+                "unrecognized richcompare opcode {}",
+                unrecognized
+            ))
+            .unwrap();
+            unsafe { PyErr_SetString(PyExc_SystemError, msg.as_ptr()) };
+            return ptr::null_mut();
+        }
     };
-    unsafe { PyBool_FromLong(c_long::from(result)) }
+
+    if cmp {
+        unsafe { Py_NewRef(Py_True()) }
+    } else {
+        unsafe { Py_NewRef(Py_False()) }
+    }
 }

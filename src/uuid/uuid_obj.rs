@@ -2,7 +2,7 @@ use pyo3::ffi::PyObject;
 
 #[repr(C)]
 pub struct UUIDObject {
-    pub ob_base: PyObject,
+    pub _ob_base: PyObject,
     pub hi: u64,
     pub lo: u64,
 }
