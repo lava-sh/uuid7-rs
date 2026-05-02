@@ -1,4 +1,4 @@
-use std::os::raw::c_int;
+use std::ffi::c_int;
 
 use crate::hex::table::{HEX_PAIR_TO_BYTE, HEX_PAIRS};
 

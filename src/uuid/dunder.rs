@@ -1,4 +1,4 @@
-use std::os::raw::{c_int, c_long};
+use std::ffi::{c_int, c_long};
 
 use pyo3::ffi::{
     Py_EQ, Py_GE, Py_GT, Py_INCREF, Py_LE, Py_LT, Py_NE, Py_NotImplemented, Py_TYPE, Py_hash_t,
