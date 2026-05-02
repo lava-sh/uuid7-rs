@@ -10,15 +10,9 @@ crate-type = ["cdylib"]
 [build-dependencies]
 pyo3-build-config = { version = "=0.28.3", features = ["resolve-config"] }
 
-[dependencies.pyo3]
-version = "=0.28.3"
-features = [
-    "extension-module",
-    "generate-import-lib",
-]
-
-[dependencies.getrandom]
-version = "=0.4.2"
+[dependencies]
+pyo3 = { version = "=0.28.3", features = ["generate-import-lib"] }
+getrandom = { version = "=0.4.2" }
 
 [target."cfg(unix)".dependencies]
 libc = "=0.2.186"
