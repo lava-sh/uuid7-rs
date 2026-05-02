@@ -29,7 +29,7 @@ mod py_3_14 {
     }
 
     unsafe extern "C" {
-        // https://docs.python.org/3/c-api/long.html#c.PyLongWriter_Createww
+        // https://docs.python.org/3/c-api/long.html#c.PyLongWriter_Create
         fn PyLongWriter_Create(
             negative: c_int,
             ndigits: Py_ssize_t,
