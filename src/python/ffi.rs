@@ -25,9 +25,9 @@ struct PyLongWriter {
 #[cfg(all(Py_3_14, not(PyPy)))]
 unsafe extern "C" {
     fn PyLongWriter_Create(
-        negative: std::os::raw::c_int,
+        negative: std::ffi::c_int,
         ndigits: pyo3::ffi::Py_ssize_t,
-        digits: *mut *mut std::os::raw::c_void,
+        digits: *mut *mut std::ffi::c_void,
     ) -> *mut PyLongWriter;
 
     fn PyLongWriter_Finish(writer: *mut PyLongWriter) -> *mut PyObject;
@@ -36,7 +36,7 @@ unsafe extern "C" {
 #[cfg(all(Py_3_14, not(PyPy)))]
 pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
     use std::{
-        os::raw::c_void,
+        ffi::c_void,
         ptr::{addr_of_mut, null_mut},
     };
 
@@ -62,7 +62,7 @@ pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
 
 #[cfg(all(Py_3_13, not(all(Py_3_14, not(PyPy)))))]
 pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
-    use std::os::raw::c_void;
+    use std::ffi::c_void;
 
     use pyo3::ffi::{
         Py_ASNATIVEBYTES_BIG_ENDIAN, Py_ASNATIVEBYTES_UNSIGNED_BUFFER,
@@ -82,7 +82,7 @@ pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
 
 #[cfg(not(Py_3_13))]
 pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
-    use std::os::raw::c_uchar;
+    use std::ffi::c_uchar;
 
     use pyo3::ffi::_PyLong_FromByteArray;
 

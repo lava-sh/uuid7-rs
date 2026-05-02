@@ -1,5 +1,5 @@
 use std::{
-    os::raw::{c_char, c_int},
+    ffi::{c_char, c_int},
     ptr::{addr_of_mut, copy_nonoverlapping, null_mut, read_unaligned, write_unaligned},
     slice::from_raw_parts,
 };
@@ -133,7 +133,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         unsafe {
             PyLong_AsNativeBytes(
                 value,
-                bytes.as_mut_ptr().cast::<std::os::raw::c_void>(),
+                bytes.as_mut_ptr().cast::<std::ffi::c_void>(),
                 16,
                 pyo3::ffi::Py_ASNATIVEBYTES_BIG_ENDIAN
                     | pyo3::ffi::Py_ASNATIVEBYTES_UNSIGNED_BUFFER
@@ -145,7 +145,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         unsafe {
             PyLong_AsNativeBytes(
                 value.cast::<pyo3::ffi::PyLongObject>(),
-                bytes.as_mut_ptr().cast::<std::os::raw::c_uchar>(),
+                bytes.as_mut_ptr().cast::<std::ffi::c_uchar>(),
                 16,
                 0,
                 0,

@@ -1,5 +1,5 @@
 use std::{
-    os::raw::{c_char, c_ulong, c_void},
+    ffi::{c_char, c_ulong, c_void},
     ptr,
 };
 

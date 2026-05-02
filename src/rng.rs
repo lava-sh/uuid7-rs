@@ -1,4 +1,4 @@
-use std::os::raw::c_int;
+use std::ffi::c_int;
 
 use crate::python::exceptions::{PyOSError, PyValueError};
 #[cfg(unix)]

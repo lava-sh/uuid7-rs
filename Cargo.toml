@@ -54,6 +54,7 @@ complexity = { level = "deny", priority = -1 }
 suspicious = { level = "deny", priority = -1 }
 
 allow_attributes = "deny"
+disallowed_types = "deny"
 
 too_many_lines = "allow"
 manual_let_else = "allow"
