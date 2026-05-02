@@ -1,11 +1,8 @@
-use std::{
-    ffi::{CString, c_int},
-    ptr,
-};
+use std::{ffi::c_int, ptr};
 
 use pyo3::ffi::{
     Py_EQ, Py_False, Py_GE, Py_GT, Py_INCREF, Py_LE, Py_LT, Py_NE, Py_NewRef, Py_NotImplemented,
-    Py_TYPE, Py_True, Py_hash_t, PyErr_SetString, PyExc_SystemError, PyObject,
+    Py_TYPE, Py_True, Py_hash_t, PyErr_Format, PyExc_SystemError, PyObject,
 };
 
 use crate::{
@@ -71,9 +68,13 @@ pub extern "C" fn richcompare(
         Py_GT => ordering.is_gt(),
         Py_GE => ordering.is_ge(),
         unrecognized => {
-            let msg =
-                CString::new(&*format!("unrecognized richcompare opcode {unrecognized}",)).unwrap();
-            unsafe { PyErr_SetString(PyExc_SystemError, msg.as_ptr()) };
+            unsafe {
+                PyErr_Format(
+                    PyExc_SystemError,
+                    c"unrecognized richcompare opcode %d".as_ptr(),
+                    unrecognized,
+                );
+            }
             return ptr::null_mut();
         }
     };

@@ -8,9 +8,9 @@ macro_rules! exception {
 
         impl $name {
             #[inline]
-            pub fn new_err(message: &CStr) {
+            pub fn new_err(msg: &CStr) {
                 unsafe {
-                    PyErr_SetString($exc, message.as_ptr());
+                    PyErr_SetString($exc, msg.as_ptr());
                 }
             }
         }
