@@ -36,13 +36,13 @@ urls.Homepage = "https://github.com/lava-sh/uuid7-rs"
 urls."Bug Tracker" = "https://github.com/lava-sh/uuid7-rs/issues"
 
 [dependency-groups]
-typos = ["typos == 1.45.2"]
+typos = ["typos == 1.46.0"]
 zizmor = ["zizmor == 1.24.1"]
-rumdl = ["rumdl == 0.1.84"]
+rumdl = ["rumdl == 0.1.86"]
 maturin = ["maturin == 1.13.1"]
 pytest = ["pytest == 9.0.3"]
 ci = [
-    "ty == 0.0.33",
+    "ty == 0.0.34",
     "ruff == 0.15.12",
     { include-group = "maturin" },
     { include-group = "pytest" },
