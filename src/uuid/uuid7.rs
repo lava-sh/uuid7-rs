@@ -174,7 +174,7 @@ fn uuid7_parts(
 }
 
 pub extern "C" fn uuid7(
-    _self: *mut PyObject,
+    _: *mut PyObject,
     args: *const *mut PyObject,
     nargs: Py_ssize_t,
     kwnames: *mut PyObject,
@@ -186,7 +186,7 @@ pub extern "C" fn uuid7(
 }
 
 pub extern "C" fn uuid7_int(
-    _self: *mut PyObject,
+    _: *mut PyObject,
     args: *const *mut PyObject,
     nargs: Py_ssize_t,
     kwnames: *mut PyObject,
