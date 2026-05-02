@@ -7,12 +7,12 @@ use std::{
 use pyo3::{
     PyErr, PyResult, Python,
     ffi::{
-        METH_NOARGS, METH_O, Py_INCREF, Py_None, Py_REFCNT, Py_TPFLAGS_DEFAULT, Py_nb_int,
-        Py_ssize_t, Py_tp_dealloc, Py_tp_free, Py_tp_getset, Py_tp_hash, Py_tp_methods, Py_tp_new,
-        Py_tp_repr, Py_tp_richcompare, Py_tp_str, PyDict_Next, PyErr_Format, PyExc_TypeError,
-        PyGetSetDef, PyMethodDef, PyMethodDefPointer, PyModule_AddObjectRef, PyObject,
-        PyObject_Free, PyObject_New, PyType_FromSpec, PyType_Slot, PyType_Spec, PyTypeObject,
-        PyUnicode_CompareWithASCIIString,
+        METH_NOARGS, METH_O, Py_INCREF, Py_None, Py_REFCNT, Py_TPFLAGS_DEFAULT,
+        Py_TPFLAGS_IMMUTABLETYPE, Py_nb_int, Py_ssize_t, Py_tp_dealloc, Py_tp_free, Py_tp_getset,
+        Py_tp_hash, Py_tp_methods, Py_tp_new, Py_tp_repr, Py_tp_richcompare, Py_tp_str,
+        PyDict_Next, PyErr_Format, PyExc_TypeError, PyGetSetDef, PyMethodDef, PyMethodDefPointer,
+        PyModule_AddObjectRef, PyObject, PyObject_Free, PyObject_New, PyType_FromSpec, PyType_Slot,
+        PyType_Spec, PyTypeObject, PyUnicode_CompareWithASCIIString,
     },
 };
 
@@ -250,7 +250,7 @@ static mut UUID_GETSET: [PyGetSetDef; 15] = [
     },
 ];
 
-#[expect(non_snake_case)]
+#[expect(non_snake_case, clippy::cast_possible_wrap)]
 pub unsafe fn UUID() -> PyResult<*mut PyObject> {
     let mut slots = [
         PyType_Slot {
@@ -300,10 +300,9 @@ pub unsafe fn UUID() -> PyResult<*mut PyObject> {
     ];
     let mut spec = PyType_Spec {
         name: c"uuid7_rs._core._UUID".as_ptr(),
-        basicsize: c_int::try_from(size_of::<UUIDObject>())
-            .expect("UUIDObject fits PyType_Spec basicsize"),
+        basicsize: size_of::<UUIDObject>() as c_int,
         itemsize: 0,
-        flags: Py_TPFLAGS_DEFAULT as c_uint,
+        flags: (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_IMMUTABLETYPE) as c_uint,
         slots: slots.as_mut_ptr(),
     };
     let tp = unsafe { PyType_FromSpec(addr_of_mut!(spec)) };
