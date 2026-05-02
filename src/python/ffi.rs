@@ -91,7 +91,7 @@ mod py_3_13 {
 mod pre_py_3_13 {
     use std::ffi::c_uchar;
 
-    use pyo3::ffi::_PyLong_FromByteArray;
+    use pyo3::ffi::{_PyLong_FromByteArray, PyObject};
 
     use crate::parse::uuid_to_bytes;
 
