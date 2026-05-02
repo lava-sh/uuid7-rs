@@ -71,11 +71,8 @@ pub extern "C" fn richcompare(
         Py_GT => ordering.is_gt(),
         Py_GE => ordering.is_ge(),
         unrecognized => {
-            let msg = CString::new(&*format!(
-                "unrecognized richcompare opcode {}",
-                unrecognized
-            ))
-            .unwrap();
+            let msg =
+                CString::new(&*format!("unrecognized richcompare opcode {unrecognized}",)).unwrap();
             unsafe { PyErr_SetString(PyExc_SystemError, msg.as_ptr()) };
             return ptr::null_mut();
         }
