@@ -1,6 +1,4 @@
-use std::ffi::CStr;
-
-use pyo3::ffi::{PyErr_SetString, PyExc_OSError, PyExc_TypeError, PyExc_ValueError};
+use pyo3::ffi::{PyExc_OSError, PyExc_TypeError, PyExc_ValueError};
 
 macro_rules! exception {
     ($name:ident, $exc:ident) => {
@@ -8,9 +6,9 @@ macro_rules! exception {
 
         impl $name {
             #[inline]
-            pub fn new_err(msg: &CStr) {
+            pub fn new_err(msg: &std::ffi::CStr) {
                 unsafe {
-                    PyErr_SetString($exc, msg.as_ptr());
+                    pyo3::ffi::PyErr_SetString($exc, msg.as_ptr());
                 }
             }
         }

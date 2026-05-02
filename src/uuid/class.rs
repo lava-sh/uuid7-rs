@@ -194,7 +194,7 @@ pub extern "C" fn uuid_type_new(
     uuid_new(hi, lo).cast::<PyObject>()
 }
 
-static mut UUID_METHODS: [PyMethodDef; 3] = [
+static mut METHODS: [PyMethodDef; 3] = [
     PyMethodDef {
         ml_name: c"__copy__".as_ptr(),
         ml_meth: PyMethodDefPointer {
@@ -226,7 +226,7 @@ macro_rules! getset {
     };
 }
 
-static mut UUID_GETSET: [PyGetSetDef; 15] = [
+static mut GETSET: [PyGetSetDef; 15] = [
     getset!(c"bytes", bytes),
     getset!(c"bytes_le", bytes_le),
     getset!(c"clock_seq", get_clock_seq),
@@ -279,11 +279,11 @@ pub unsafe fn UUID() -> PyResult<*mut PyObject> {
         },
         PyType_Slot {
             slot: Py_tp_methods,
-            pfunc: addr_of_mut!(UUID_METHODS).cast::<c_void>(),
+            pfunc: addr_of_mut!(METHODS).cast::<c_void>(),
         },
         PyType_Slot {
             slot: Py_tp_getset,
-            pfunc: addr_of_mut!(UUID_GETSET).cast::<c_void>(),
+            pfunc: addr_of_mut!(GETSET).cast::<c_void>(),
         },
         PyType_Slot {
             slot: Py_nb_int,
