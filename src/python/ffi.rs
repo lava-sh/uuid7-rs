@@ -45,7 +45,7 @@ mod py_3_14_plus {
     }
 
     extern_libpython! {
-        dlls: ["python314", "python315"]
+        dlls: ["python314", "python314_d", "python315", "python315_d"]
         {
             // https://docs.python.org/3/c-api/long.html#c.PyLongWriter
             fn PyLongWriter_Create(
