@@ -18,7 +18,6 @@ jobs:
             target: x86_64,
             interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "--features mimalloc",
-            use-pgo: true,
           }
           - {
             # x86 (32-bit)
@@ -26,7 +25,6 @@ jobs:
             target: x86,
             interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "--features mimalloc",
-            use-pgo: false,
           }
           - {
             # ARM64
@@ -34,7 +32,6 @@ jobs:
             target: aarch64,
             interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "--features mimalloc",
-            use-pgo: true,
           }
           - {
             # ARMv7 (32-bit)
@@ -42,7 +39,6 @@ jobs:
             target: armv7,
             interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "",
-            use-pgo: false,
           }
           - {
             # IBM System z (s390x)
@@ -50,7 +46,6 @@ jobs:
             target: s390x,
             interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "",
-            use-pgo: false,
           }
           - {
             # PowerPC64 Little Endian
@@ -58,7 +53,6 @@ jobs:
             target: ppc64le,
             interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "",
-            use-pgo: false,
           }
           - {
             # RISC-V 64-bit
@@ -66,7 +60,6 @@ jobs:
             target: riscv64,
             interpreter: "3.10 3.11 3.12 3.13 3.14 pypy3.11",
             maturin-build-args: "--features mimalloc",
-            use-pgo: false,
           }
 
     steps:
@@ -92,23 +85,6 @@ jobs:
             --interpreter ${{ matrix.platform.interpreter }}
             ${{ matrix.platform.maturin-build-args }}
             --compatibility pypi
-
-      - name: "Install rust stable + llvm-tools"
-        if: matrix.platform.use-pgo == true
-        id: rust-toolchain
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
-        with:
-          components: llvm-tools
-          toolchain: nightly
-
-      - name: "Build PGO wheel"
-        if: matrix.platform.use-pgo == true
-        uses: ./.github/actions/build-pgo-wheel
-        with:
-          target: ${{ matrix.platform.target }}
-          interpreter: ${{ matrix.platform.interpreter }}
-          rust-toolchain: ${{ steps.rust-toolchain.outputs.name }}
-          maturin-build-args: ${{ matrix.platform.maturin-build-args }}
 
       - name: "Upload wheels"
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
