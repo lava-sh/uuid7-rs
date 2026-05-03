@@ -1,7 +1,7 @@
-use pyo3_build_config::PythonImplementation;
+use pyo3_build_config::{PythonImplementation, use_pyo3_cfgs};
 
 fn main() {
-    pyo3_build_config::use_pyo3_cfgs();
+    use_pyo3_cfgs();
 
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
         return;
