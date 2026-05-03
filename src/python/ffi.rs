@@ -30,6 +30,17 @@ mod py_3_14_plus {
         _opaque: [u8; 0],
     }
 
+    // PyLongWriter_* are not re-exported through pyo3-ffi. On Windows pyo3-ffi
+    // uses `raw-dylib` linking and ships no import library, so attach the same
+    // `#[link]` attribute here for every supported Python DLL name.
+    #[cfg_attr(
+        all(windows, pyo3_dll = "python314"),
+        link(name = "python314", kind = "raw-dylib")
+    )]
+    #[cfg_attr(
+        all(windows, pyo3_dll = "python315"),
+        link(name = "python315", kind = "raw-dylib")
+    )]
     unsafe extern "C" {
         // https://docs.python.org/3/c-api/long.html#c.PyLongWriter_Create
         fn PyLongWriter_Create(
