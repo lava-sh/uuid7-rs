@@ -148,7 +148,7 @@ pub extern "C" fn uuid_type_new(
                 unsafe {
                     PyErr_Format(
                         PyExc_TypeError,
-                        c"UUID() got an unexpected kword argument '%U'".as_ptr(),
+                        c"UUID.__init__() got an unexpected keyword argument '%U'".as_ptr(),
                         k,
                     );
                 }
