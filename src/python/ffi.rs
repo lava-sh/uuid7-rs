@@ -25,19 +25,22 @@ mod py_3_14_plus {
     use pyo3::ffi::{Py_ssize_t, PyObject};
 
     macro_rules! extern_libpython {
-    (dlls: [$($dll:literal),* $(,)?] { $($body:tt)* }) => {
-        $(
-            #[cfg_attr(
-                all(windows, target_arch = "x86", pyo3_dll = $dll),
-                link(name = $dll, kind = "raw-dylib", import_name_type = "undecorated")
-            )]
-            #[cfg_attr(
-                all(windows, not(target_arch = "x86"), pyo3_dll = $dll),
-                link(name = $dll, kind = "raw-dylib")
-            )]
-        )*
-        unsafe extern "C" { $($body)* }
-    };}
+        (dlls: [$($dll:literal),* $(,)?] { $($body:item)* }) => {
+            $(
+                #[cfg_attr(
+                    all(windows, target_arch = "x86", pyo3_dll = $dll),
+                    link(name = $dll, kind = "raw-dylib", import_name_type = "undecorated")
+                )]
+                #[cfg_attr(
+                    all(windows, not(target_arch = "x86"), pyo3_dll = $dll),
+                    link(name = $dll, kind = "raw-dylib")
+                )]
+            )*
+            unsafe extern "C" {
+                $($body)*
+            }
+        };
+    }
 
     #[repr(C)]
     struct PyLongWriter {
@@ -45,7 +48,12 @@ mod py_3_14_plus {
     }
 
     extern_libpython! {
-        dlls: ["python314", "python314_d", "python315", "python315_d"]
+        dlls: [
+            "python314",
+            "python314_d",
+            "python315",
+            "python315_d",
+        ]
         {
             // https://docs.python.org/3/c-api/long.html#c.PyLongWriter
             fn PyLongWriter_Create(
