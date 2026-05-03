@@ -24,6 +24,11 @@ mod py_3_14_plus {
 
     use pyo3::ffi::{Py_ssize_t, PyObject};
 
+    #[repr(C)]
+    struct PyLongWriter {
+        _opaque: [u8; 0],
+    }
+
     macro_rules! extern_libpython {
         (dlls: [$($dll:literal),* $(,)?] { $($body:item)* }) => {
             $(
@@ -42,11 +47,6 @@ mod py_3_14_plus {
         };
     }
 
-    #[repr(C)]
-    struct PyLongWriter {
-        _opaque: [u8; 0],
-    }
-
     extern_libpython! {
         dlls: [
             "python314",
@@ -55,13 +55,15 @@ mod py_3_14_plus {
             "python315_d",
         ]
         {
-            // https://docs.python.org/3/c-api/long.html#c.PyLongWriter
+            // https://docs.python.org/3/c-api/long.html#c.PyLongWriter_Create
+            #[cfg_attr(all(windows, target_arch = "x86"), link_name = "_PyLongWriter_Create")]
             fn PyLongWriter_Create(
                 negative: c_int,
                 ndigits: Py_ssize_t,
                 digits: *mut *mut c_void,
             ) -> *mut PyLongWriter;
 
+            #[cfg_attr(all(windows, target_arch = "x86"), link_name = "_PyLongWriter_Finish")]
             fn PyLongWriter_Finish(writer: *mut PyLongWriter) -> *mut PyObject;
         }
     }
