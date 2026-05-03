@@ -24,9 +24,7 @@ macro_rules! extern_libpython {
     }
 
 #[repr(C)]
-struct PyLongWriter {
-    _opaque: [u8; 0],
-}
+struct PyLongWriter([u8; 0]);
 
 extern_libpython! {
     dlls: [
