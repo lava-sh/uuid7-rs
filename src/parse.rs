@@ -175,7 +175,7 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
         return -1;
     }
 
-    let size = PySequence_Fast_GET_SIZE(seq);
+    let size = unsafe { PySequence_Fast_GET_SIZE(seq) };
 
     if size != 6 {
         unsafe { Py_DECREF(seq) };
