@@ -7,7 +7,7 @@ use std::{
 use pyo3::ffi::{
     Py_DECREF, Py_None, Py_ssize_t, PyBytes_AsStringAndSize, PyErr_Clear, PyErr_Format,
     PyErr_Occurred, PyExc_TypeError, PyLong_AsUnsignedLongLong, PyLong_Check, PyObject,
-    PyObject_Length, PySequence_Fast, PySequence_Size, PyUnicode_AsUTF8AndSize, PyUnicode_Check,
+    PyObject_Length, PySequence_Fast, PyUnicode_AsUTF8AndSize, PyUnicode_Check,
 };
 
 use crate::{
@@ -173,7 +173,16 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
     if fast.is_null() {
         return -1;
     }
-    let size = unsafe { PySequence_Size(fast) };
+    let size = {
+        #[cfg(not(PyPy))]
+        unsafe {
+            pyo3::ffi::PySequence_Fast_GET_SIZE(fast)
+        }
+        #[cfg(PyPy)]
+        unsafe {
+            pyo3::ffi::PySequence_Size(fast)
+        }
+    };
     if size != 6 {
         unsafe { Py_DECREF(fast) };
         PyValueError::new_err(c"fields is not a 6-tuple");
@@ -184,16 +193,8 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
     for i in 0usize..6 {
         let item = {
             #[cfg(not(PyPy))]
-            {
-                use pyo3::ffi::{PyList_Check, PyList_GET_ITEM};
-
-                use crate::python::ffi::PyTuple_GET_ITEM;
-
-                if unsafe { PyList_Check(fast) } == 1 {
-                    unsafe { PyList_GET_ITEM(fast, i.cast_signed()) }
-                } else {
-                    unsafe { PyTuple_GET_ITEM(fast, i.cast_signed()) }
-                }
+            unsafe {
+                pyo3::ffi::PySequence_Fast_GET_ITEM(fast, i.cast_signed())
             }
 
             #[cfg(PyPy)]
