@@ -5,12 +5,12 @@ pub use pyo3::ffi::_PyLong_AsByteArray as PyLong_AsNativeBytes;
 pub use pyo3::ffi::PyLong_AsNativeBytes;
 //
 #[cfg(not(PyPy))]
-pub use pyo3::ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE, PyTuple_SET_ITEM};
+pub use pyo3::ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE, PyTuple_SET_ITEM, PySequence_Fast_GET_SIZE};
 //
 #[cfg(PyPy)]
 pub use pyo3::ffi::{
     PyTuple_GetItem as PyTuple_GET_ITEM, PyTuple_SetItem as PyTuple_SET_ITEM,
-    PyTuple_Size as PyTuple_GET_SIZE,
+    PyTuple_Size as PyTuple_GET_SIZE, PySequence_Size as PySequence_Fast_GET_SIZE
 };
 
 #[cfg(all(Py_3_14, not(PyPy)))]

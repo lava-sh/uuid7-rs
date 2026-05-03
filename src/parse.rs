@@ -14,7 +14,7 @@ use crate::{
     hex::helpers::parse_uuid_hex_str,
     python::{
         exceptions::{PyTypeError, PyValueError},
-        ffi::PyLong_AsNativeBytes,
+        ffi::PyLong_AsNativeBytes, PySequence_Fast_GET_SIZE,
     },
 };
 
@@ -169,22 +169,16 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
 pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int {
     static LIMITS: [u64; 6] = [0xFFFF_FFFF, 0xFFFF, 0xFFFF, 0xFF, 0xFF, 0xFFFF_FFFF_FFFF];
 
-    let fast = unsafe { PySequence_Fast(value, c"fields must be a 6-tuple".as_ptr()) };
-    if fast.is_null() {
+    let seq = unsafe { PySequence_Fast(value, c"fields must be a 6-tuple".as_ptr()) };
+
+    if seq.is_null() {
         return -1;
     }
-    let size = {
-        #[cfg(not(PyPy))]
-        unsafe {
-            pyo3::ffi::PySequence_Fast_GET_SIZE(fast)
-        }
-        #[cfg(PyPy)]
-        unsafe {
-            pyo3::ffi::PySequence_Size(fast)
-        }
-    };
+
+    let size = PySequence_Fast_GET_SIZE(seq);
+
     if size != 6 {
-        unsafe { Py_DECREF(fast) };
+        unsafe { Py_DECREF(seq) };
         PyValueError::new_err(c"fields is not a 6-tuple");
         return -1;
     }
@@ -194,16 +188,16 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
         let item = {
             #[cfg(not(PyPy))]
             unsafe {
-                pyo3::ffi::PySequence_Fast_GET_ITEM(fast, i.cast_signed())
+                pyo3::ffi::PySequence_Fast_GET_ITEM(seq, i.cast_signed())
             }
 
             #[cfg(PyPy)]
             {
                 use pyo3::ffi::PySequence_GetItem;
 
-                let item = unsafe { PySequence_GetItem(fast, i.cast_signed()) };
+                let item = unsafe { PySequence_GetItem(seq, i.cast_signed()) };
                 if item.is_null() {
-                    unsafe { Py_DECREF(fast) };
+                    unsafe { Py_DECREF(seq) };
                     return -1;
                 }
                 item
@@ -215,7 +209,7 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
             #[cfg(PyPy)]
             Py_DECREF(item);
             if !PyErr_Occurred().is_null() {
-                Py_DECREF(fast);
+                Py_DECREF(seq);
                 PyErr_Clear();
                 PyTypeError::new_err(c"fields must contain only integers");
                 return -1;
@@ -223,13 +217,13 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
         }
 
         if v > LIMITS[i] {
-            unsafe { Py_DECREF(fast) };
+            unsafe { Py_DECREF(seq) };
             PyValueError::new_err(c"field value out of range");
             return -1;
         }
         parts[i] = v;
     }
-    unsafe { Py_DECREF(fast) };
+    unsafe { Py_DECREF(seq) };
     *hi = (parts[0] << 32) | (parts[1] << 16) | parts[2];
     *lo = (parts[3] << 56) | (parts[4] << 48) | parts[5];
     0
