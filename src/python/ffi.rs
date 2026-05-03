@@ -16,7 +16,7 @@ pub use pyo3::ffi::{
 };
 
 #[cfg(all(Py_3_14, not(PyPy)))]
-mod py_3_14 {
+mod py_3_14_plus {
     use std::{
         ffi::{c_int, c_void},
         ptr::{addr_of_mut, null_mut},
@@ -113,4 +113,4 @@ pub use pre_py_3_13::uuid_int_from_parts;
 pub use py_3_13::uuid_int_from_parts;
 //
 #[cfg(all(Py_3_14, not(PyPy)))]
-pub use py_3_14::uuid_int_from_parts;
+pub use py_3_14_plus::uuid_int_from_parts;
