@@ -17,6 +17,7 @@ features = ["resolve-config"]
 [dependencies.pyo3]
 git = "https://github.com/PyO3/pyo3"
 rev = "20e0cdc8cc6a50551594c05386c000c1aefc5f24"
+features = ["generate-import-lib"]
 
 [dependencies]
 # pyo3 = { version = "=0.28.3", features = ["generate-import-lib"] }
