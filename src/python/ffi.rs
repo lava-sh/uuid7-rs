@@ -24,46 +24,20 @@ mod py_3_14_plus {
 
     use pyo3::ffi::{Py_ssize_t, PyObject};
 
-    macro_rules! extern_libpython {
-        (dlls: [$($dll:literal),* $(,)?] { $($body:item)* }) => {
-            $(
-                #[cfg_attr(
-                    all(windows, target_arch = "x86", pyo3_dll = $dll),
-                    link(name = $dll, kind = "raw-dylib", import_name_type = "undecorated")
-                )]
-                #[cfg_attr(
-                    all(windows, not(target_arch = "x86"), pyo3_dll = $dll),
-                    link(name = $dll, kind = "raw-dylib")
-                )]
-            )*
-            unsafe extern "C" {
-                $($body)*
-            }
-        };
-    }
-
     #[repr(C)]
     struct PyLongWriter {
         _opaque: [u8; 0],
     }
 
-    extern_libpython! {
-        dlls: [
-            "python314",
-            "python314_d",
-            "python315",
-            "python315_d",
-        ]
-        {
-            // https://docs.python.org/3/c-api/long.html#c.PyLongWriter
-            fn PyLongWriter_Create(
-                negative: c_int,
-                ndigits: Py_ssize_t,
-                digits: *mut *mut c_void,
-            ) -> *mut PyLongWriter;
+    unsafe extern "C" {
+        // https://docs.python.org/3/c-api/long.html#c.PyLongWriter_Create
+        fn PyLongWriter_Create(
+            negative: c_int,
+            ndigits: Py_ssize_t,
+            digits: *mut *mut c_void,
+        ) -> *mut PyLongWriter;
 
-            fn PyLongWriter_Finish(writer: *mut PyLongWriter) -> *mut PyObject;
-        }
+        fn PyLongWriter_Finish(writer: *mut PyLongWriter) -> *mut PyObject;
     }
 
     pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
