@@ -13,9 +13,8 @@ use pyo3::ffi::{
 use crate::{
     hex::helpers::parse_uuid_hex_str,
     python::{
-        PySequence_Fast_GET_SIZE,
         exceptions::{PyTypeError, PyValueError},
-        ffi::PyLong_AsNativeBytes,
+        ffi::{PyLong_AsNativeBytes, PySequence_Fast_GET_SIZE},
     },
 };
 
