@@ -136,7 +136,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
 
         use crate::python::ffi::{PyLong_Export, PyLong_FreeExport, PyLongExport};
 
-        let mut export = PyLongExport {
+        let mut long_export = PyLongExport {
             value: 0,
             negative: 0,
             ndigits: 0,
@@ -144,30 +144,30 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
             _reserved: 0,
         };
 
-        if unsafe { PyLong_Export(value, addr_of_mut!(export)) } < 0 {
+        if unsafe { PyLong_Export(value, addr_of_mut!(long_export)) } < 0 {
             unsafe { PyErr_Clear() };
             PyValueError::new_err(INT_RANGE_ERR);
             return -1;
         }
 
-        if export.digits.is_null() {
-            if export.value < 0 {
+        if long_export.digits.is_null() {
+            if long_export.value < 0 {
                 PyValueError::new_err(INT_RANGE_ERR);
                 return -1;
             }
             *hi = 0;
-            *lo = export.value.cast_unsigned();
+            *lo = long_export.value.cast_unsigned();
             return 0;
         }
 
-        if export.negative != 0 || export.ndigits > 5 {
-            unsafe { PyLong_FreeExport(addr_of_mut!(export)) };
+        if long_export.negative != 0 || long_export.ndigits > 5 {
+            unsafe { PyLong_FreeExport(addr_of_mut!(long_export)) };
             PyValueError::new_err(INT_RANGE_ERR);
             return -1;
         }
 
-        let nd = export.ndigits.cast_unsigned();
-        let d = export.digits.cast::<u32>();
+        let nd = long_export.ndigits.cast_unsigned();
+        let d = long_export.digits.cast::<u32>();
         let (d0, d1, d2, d3, d4) = unsafe {
             match nd {
                 1 => (u64::from(*d), 0, 0, 0, 0),
@@ -197,7 +197,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         };
 
         if d4 > 0xFF {
-            unsafe { PyLong_FreeExport(addr_of_mut!(export)) };
+            unsafe { PyLong_FreeExport(addr_of_mut!(long_export)) };
             PyValueError::new_err(INT_RANGE_ERR);
             return -1;
         }
@@ -205,7 +205,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         *lo = d0 | (d1 << 30) | (d2 << 60);
         *hi = (d2 >> 4) | (d3 << 26) | (d4 << 56);
 
-        unsafe { PyLong_FreeExport(addr_of_mut!(export)) };
+        unsafe { PyLong_FreeExport(addr_of_mut!(long_export)) };
         0
     }
 
