@@ -1,7 +1,7 @@
 #[cfg(not(Py_3_13))]
 pub use pyo3::ffi::_PyLong_AsByteArray as PyLong_AsNativeBytes;
 //
-#[cfg(all(Py_3_13, not(all(Py_3_14))))]
+#[cfg(all(Py_3_13, not(all(Py_3_14, not(PyPy)))))]
 pub use pyo3::ffi::PyLong_AsNativeBytes;
 //
 #[cfg(not(PyPy))]

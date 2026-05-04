@@ -156,7 +156,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
                 return -1;
             }
             *hi = 0;
-            *lo = export.value as u64;
+            *lo = export.value.cast_unsigned();
             return 0;
         }
 
@@ -166,28 +166,34 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
             return -1;
         }
 
-        let nd = export.ndigits as usize;
+        let nd = export.ndigits.cast_unsigned();
         let d = export.digits.cast::<u32>();
-        let d0 = if nd >= 1 { (unsafe { *d }) as u64 } else { 0 };
-        let d1 = if nd >= 2 {
-            (unsafe { *d.add(1) }) as u64
-        } else {
-            0
-        };
-        let d2 = if nd >= 3 {
-            (unsafe { *d.add(2) }) as u64
-        } else {
-            0
-        };
-        let d3 = if nd >= 4 {
-            (unsafe { *d.add(3) }) as u64
-        } else {
-            0
-        };
-        let d4 = if nd >= 5 {
-            (unsafe { *d.add(4) }) as u64
-        } else {
-            0
+        let (d0, d1, d2, d3, d4) = unsafe {
+            match nd {
+                1 => (u64::from(*d), 0, 0, 0, 0),
+                2 => (u64::from(*d), u64::from(*d.add(1)), 0, 0, 0),
+                3 => (
+                    u64::from(*d),
+                    u64::from(*d.add(1)),
+                    u64::from(*d.add(2)),
+                    0,
+                    0,
+                ),
+                4 => (
+                    u64::from(*d),
+                    u64::from(*d.add(1)),
+                    u64::from(*d.add(2)),
+                    u64::from(*d.add(3)),
+                    0,
+                ),
+                _ => (
+                    u64::from(*d),
+                    u64::from(*d.add(1)),
+                    u64::from(*d.add(2)),
+                    u64::from(*d.add(3)),
+                    u64::from(*d.add(4)),
+                ),
+            }
         };
 
         if d4 > 0xFF {
@@ -200,10 +206,10 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         *hi = (d2 >> 4) | (d3 << 26) | (d4 << 56);
 
         unsafe { PyLong_FreeExport(addr_of_mut!(export)) };
-        return 0;
+        0
     }
 
-    #[cfg(not(Py_3_14))]
+    #[cfg(not(all(Py_3_14, not(PyPy))))]
     {
         let mut bytes = [0u8; 16];
         let rc = {
