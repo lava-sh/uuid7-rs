@@ -126,7 +126,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
     const INT_RANGE_ERR: &CStr = c"int is out of range (need a 128-bit value)";
 
     if unsafe { PyLong_Check(value) } == 0 {
-        PyTypeError::new_err(INT_RANGE_ERR);
+        PyTypeError::new_err(c"int must be a 128-bit integer");
         return -1;
     }
 
