@@ -150,7 +150,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
             return -1;
         }
 
-        if export.ndigits == 0 {
+        if export.digits.is_null() {
             if export.value < 0 {
                 PyValueError::new_err(INT_RANGE_ERR);
                 return -1;
