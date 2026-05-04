@@ -14,10 +14,6 @@ mod windows;
 #[global_allocator]
 static GLOBAL_ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[expect(
-    clippy::disallowed_types,
-    reason = "PyO3 macro expands to std::os::raw types"
-)]
 #[pyo3::pymodule(name = "_core")]
 mod _core {
     use std::{ptr, ptr::addr_of_mut};
