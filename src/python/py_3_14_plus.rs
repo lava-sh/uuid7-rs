@@ -26,6 +26,16 @@ macro_rules! extern_libpython {
 #[repr(C)]
 struct PyLongWriter([u8; 0]);
 
+// https://docs.python.org/3/c-api/long.html#c.PyLongExport
+#[repr(C)]
+pub struct PyLongExport {
+    pub value: i64,
+    pub negative: u8,
+    pub ndigits: Py_ssize_t,
+    pub digits: *const c_void,
+    pub _reserved: usize,
+}
+
 extern_libpython! {
     dlls: [
         "python314",
@@ -41,7 +51,17 @@ extern_libpython! {
             digits: *mut *mut c_void,
         ) -> *mut PyLongWriter;
 
+        // https://docs.python.org/3/c-api/long.html#c.PyLongWriter_Finish
         fn PyLongWriter_Finish(writer: *mut PyLongWriter) -> *mut PyObject;
+
+        // https://docs.python.org/3/c-api/long.html#c.PyLong_Export
+       pub fn PyLong_Export(
+            obj: *mut PyObject,
+            export_long: *mut PyLongExport,
+        ) -> c_int;
+
+        // https://docs.python.org/3/c-api/long.html#c.PyLong_FreeExport
+        pub fn PyLong_FreeExport(export_long: *mut PyLongExport);
     }
 }
 

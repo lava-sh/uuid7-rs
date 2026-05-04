@@ -1,7 +1,7 @@
 #[cfg(not(Py_3_13))]
 pub use pyo3::ffi::_PyLong_AsByteArray as PyLong_AsNativeBytes;
 //
-#[cfg(Py_3_13)]
+#[cfg(all(Py_3_13, not(all(Py_3_14))))]
 pub use pyo3::ffi::PyLong_AsNativeBytes;
 //
 #[cfg(not(PyPy))]
@@ -22,4 +22,6 @@ pub use crate::python::py_3_10_plus::uuid_int_from_parts;
 pub use crate::python::py_3_13::uuid_int_from_parts;
 //
 #[cfg(all(Py_3_14, not(PyPy)))]
-pub use crate::python::py_3_14_plus::uuid_int_from_parts;
+pub use crate::python::py_3_14_plus::{
+    PyLong_Export, PyLong_FreeExport, PyLongExport, uuid_int_from_parts,
+};
