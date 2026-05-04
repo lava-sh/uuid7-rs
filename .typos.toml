@@ -1,0 +1,7 @@
+[default.extend-words]
+# error: `nd` should be `and`
+# --> .\src\parse.rs:169:13
+#     |
+# 169 |         let nd = export.ndigits as usize;
+#     |             ^^
+nd = "nd"
