@@ -38,7 +38,7 @@ urls."Bug Tracker" = "https://github.com/lava-sh/uuid7-rs/issues"
 [dependency-groups]
 typos = ["typos == 1.46.0"]
 zizmor = ["zizmor == 1.24.1"]
-rumdl = ["rumdl == 0.1.86"]
+rumdl = ["rumdl == 0.1.87"]
 maturin = ["maturin == 1.13.1"]
 pytest = ["pytest == 9.0.3"]
 ci = [
