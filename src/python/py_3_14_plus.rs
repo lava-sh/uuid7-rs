@@ -3,7 +3,7 @@ use std::{
     ptr::{addr_of_mut, null_mut},
 };
 
-use pyo3::ffi::{Py_ssize_t, PyObject};
+use pyo3::ffi::{Py_ssize_t, Py_uintptr_t, PyObject};
 
 macro_rules! extern_libpython {
         (dlls: [$($dll:literal),* $(,)?] { $($body:item)* }) => {
@@ -33,7 +33,7 @@ pub struct PyLongExport {
     pub negative: u8,
     pub ndigits: Py_ssize_t,
     pub digits: *const c_void,
-    pub _reserved: usize,
+    pub _reserved: Py_uintptr_t,
 }
 
 extern_libpython! {
