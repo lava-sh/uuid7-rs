@@ -1,6 +1,6 @@
 [package]
 name = "uuid7-rs"
-version = "0.0.5"
+version = "0.0.6"
 edition = "2024"
 
 [lib]
@@ -20,12 +20,16 @@ rev = "20246a895718baa603f836b187b498cedc6941ca"
 # remove after pyo3 0.29.0 release
 features = ["generate-import-lib"]
 
-[dependencies]
-# pyo3 = { version = "=0.29.0" }
-getrandom = { version = "=0.4.2" }
-
 [target."cfg(unix)".dependencies]
 libc = "=0.2.186"
+
+[dependencies.rand]
+version = "=0.10.1"
+default-features = false
+features = [
+    "std_rng",
+    "sys_rng",
+]
 
 [dependencies.mimalloc]
 optional = true
