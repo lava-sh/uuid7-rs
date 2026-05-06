@@ -40,13 +40,13 @@ def uuid7(
         mode:
             Changes only how the random and counter bits are produced.
 
-            `mode="fast"` seeds the internal generator state from the OS
+            mode="fast" seeds the internal generator state from the OS
             randomness source once and then derives the random and counter
             bits from the internal PRNG state in the hot path.
 
-            `mode="secure"` gets the random and counter bits from the OS
-            randomness source while UUIDs are being generated and does not
-            rely on the internal PRNG state for per-UUID random data.
+            mode="secure" seeds a cryptographically secure PRNG (ChaCha12)
+            from the OS randomness source once and then derives the random
+            and counter bits from that PRNG state in the hot path.
 
     Returns:
         A UUIDv7 object.
