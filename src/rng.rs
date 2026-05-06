@@ -1,4 +1,9 @@
-use std::ffi::c_int;
+use std::{cell::RefCell, ffi::c_int};
+
+use rand::{
+    Rng, TryRng,
+    rngs::{StdRng, SysRng},
+};
 
 use crate::python::exceptions::{PyOSError, PyValueError};
 #[cfg(unix)]
@@ -19,9 +24,13 @@ static mut W1_SEEDED: bool = false;
 static mut LAST_MS: u64 = 0;
 static mut COUNTER42: u64 = 0;
 
+thread_local! {
+    static RNG: RefCell<StdRng> = RefCell::new(rand::make_rng());
+}
+
 #[inline]
 pub fn fill_random(buf: &mut [u8]) -> c_int {
-    match getrandom::fill(buf) {
+    match SysRng.try_fill_bytes(buf) {
         Ok(()) => 0,
         Err(_) => -1,
     }
@@ -59,13 +68,8 @@ fn seed_rng() -> c_int {
     0
 }
 
-pub fn rnd_u64_secure() -> Result<u64, ()> {
-    let mut buf = [0u8; 8];
-    if fill_random(&mut buf) != 0 {
-        PyOSError::new_err(c"unable to generate random bytes");
-        return Err(());
-    }
-    Ok(u64::from_ne_bytes(buf))
+pub fn rnd_u64_secure() -> u64 {
+    RNG.with_borrow_mut(Rng::next_u64)
 }
 
 #[inline]
@@ -79,6 +83,9 @@ pub fn reseed() {
         LAST_MS = 0;
         COUNTER42 = 0;
     }
+    RNG.with_borrow_mut(|rng| {
+        *rng = rand::make_rng();
+    });
 }
 
 #[inline]
@@ -153,7 +160,14 @@ pub fn build_uuid7_default_secure(high: &mut u64, low: &mut u64) -> c_int {
     }
 
     let (mut ts, mut ra, mut t62) = (0u64, 0u16, 0u64);
-    if advance_monotonic_with(now_ms(), &mut ts, &mut ra, &mut t62, rnd_u64_secure) != 0 {
+    if advance_monotonic_with(
+        now_ms(),
+        &mut ts,
+        &mut ra,
+        &mut t62,
+        || Ok(rnd_u64_secure()),
+    ) != 0
+    {
         return -1;
     }
 
@@ -236,8 +250,9 @@ pub fn build_uuid7_with_args_secure(
     }
 
     let (mut ra, mut t62) = (0u16, 0u64);
-    let state =
-        extract_random_bits_with(has_ts, has_nanos, nanos, &mut ra, &mut t62, rnd_u64_secure);
+    let state = extract_random_bits_with(has_ts, has_nanos, nanos, &mut ra, &mut t62, || {
+        Ok(rnd_u64_secure())
+    });
 
     if state < 0 {
         return -1;
@@ -245,7 +260,7 @@ pub fn build_uuid7_with_args_secure(
 
     let (hi, lo) = if state > 0 {
         let mut ms = ts_ms;
-        if advance_monotonic_with(ms, &mut ms, &mut ra, &mut t62, rnd_u64_secure) != 0 {
+        if advance_monotonic_with(ms, &mut ms, &mut ra, &mut t62, || Ok(rnd_u64_secure())) != 0 {
             return -1;
         }
         build_words(ms, ra, t62)
