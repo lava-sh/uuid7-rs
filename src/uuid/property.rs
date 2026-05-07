@@ -67,7 +67,7 @@ pub fn with_buf(len: Py_ssize_t, f: impl FnOnce(&mut [u8])) -> *mut PyObject {
     {
         use pyo3::ffi::PyUnicode_FromStringAndSize;
 
-        let mut buf = vec![0u8; len.cast_unsigned()];
+        let mut buf = vec![0_u8; len.cast_unsigned()];
         f(&mut buf);
         unsafe { PyUnicode_FromStringAndSize(buf.as_ptr().cast::<c_char>(), len) }
     }
@@ -75,8 +75,8 @@ pub fn with_buf(len: Py_ssize_t, f: impl FnOnce(&mut [u8])) -> *mut PyObject {
 
 pub extern "C" fn bytes_le(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
     let obj = UUIDObject::from_self(self_);
-    let mut bytes = [0u8; 16];
-    let mut reordered = [0u8; 16];
+    let mut bytes = [0_u8; 16];
+    let mut reordered = [0_u8; 16];
     uuid_to_bytes(obj.hi, obj.lo, bytes.as_mut_ptr());
     uuid_to_bytes_le(&bytes, &mut reordered);
     unsafe { PyBytes_FromStringAndSize(reordered.as_ptr().cast::<c_char>(), 16) }
@@ -97,7 +97,7 @@ pub extern "C" fn hex(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
 
 pub extern "C" fn bytes(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
     let obj = UUIDObject::from_self(self_);
-    let mut bytes = [0u8; 16];
+    let mut bytes = [0_u8; 16];
     uuid_to_bytes(obj.hi, obj.lo, bytes.as_mut_ptr());
     unsafe { PyBytes_FromStringAndSize(bytes.as_ptr().cast::<c_char>(), 16) }
 }

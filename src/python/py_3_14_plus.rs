@@ -1,6 +1,7 @@
 use std::{
     ffi::{c_int, c_void},
     ptr::{addr_of_mut, null_mut},
+    sync::OnceLock,
 };
 
 use pyo3::ffi::{Py_ssize_t, Py_uintptr_t, PyObject};
@@ -26,7 +27,17 @@ macro_rules! extern_libpython {
 #[repr(C)]
 struct PyLongWriter([u8; 0]);
 
-// https://docs.python.org/3/c-api/long.html#c.PyLongExport
+const PYLONG_BITS_IN_DIGIT: u8 = 30;
+
+// https://docs.python.org/3/c-api/long.html#c.PyLong_GetNativeLayout
+#[repr(C)]
+struct PyLongLayout {
+    bits_per_digit: u8,
+    digit_size: u8,
+    digits_order: i8,
+    digit_endianness: i8,
+}
+
 #[repr(C)]
 pub struct PyLongExport {
     pub value: i64,
@@ -44,6 +55,9 @@ extern_libpython! {
         "python315_d",
     ]
     {
+        // https://docs.python.org/3/c-api/long.html#c.PyLong_GetNativeLayout
+        fn PyLong_GetNativeLayout() -> *const PyLongLayout;
+
         // https://docs.python.org/3/c-api/long.html#c.PyLongWriter_Create
         fn PyLongWriter_Create(
             negative: c_int,
@@ -65,8 +79,22 @@ extern_libpython! {
     }
 }
 
+#[must_use]
+pub fn is_30bit_layout() -> bool {
+    static DIGITS: OnceLock<bool> = OnceLock::new();
+
+    *DIGITS.get_or_init(|| {
+        let layout = unsafe { &*PyLong_GetNativeLayout() };
+        layout.bits_per_digit == PYLONG_BITS_IN_DIGIT
+    })
+}
+
 pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
-    const SHIFT: u32 = 30;
+    if !is_30bit_layout() {
+        return super::py_3_13::uuid_int_from_parts(hi, lo);
+    }
+
+    const SHIFT: u32 = PYLONG_BITS_IN_DIGIT as u32;
     const MASK: u64 = (1 << SHIFT) - 1;
 
     let mut ptr: *mut c_void = null_mut();

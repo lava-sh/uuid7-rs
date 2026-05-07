@@ -12,8 +12,8 @@ pub use crate::unix::time::{now_ms, platform_seeded};
 pub use crate::windows::time::{now_ms, platform_seeded};
 
 const C: u64 = 0xd07e_bc63_2746_54c7;
-const MASK42: u64 = (1u64 << 42) - 1;
-const MASK30: u64 = (1u64 << 30) - 1;
+const MASK42: u64 = (1_u64 << 42) - 1;
+const MASK30: u64 = (1_u64 << 30) - 1;
 const MASK62: u64 = 0x3FFF_FFFF_FFFF_FFFF;
 
 const V7_VERSION: u64 = 0x7000;
@@ -53,7 +53,7 @@ fn w1rand() -> u64 {
 #[cold]
 #[inline(never)]
 fn seed_rng() -> c_int {
-    let mut buf = [0u8; 16];
+    let mut buf = [0_u8; 16];
     if fill_random(&mut buf) != 0 {
         PyOSError::new_err(c"unable to generate random bytes");
         return -1;
@@ -146,7 +146,7 @@ pub fn build_uuid7_default(high: &mut u64, low: &mut u64) -> c_int {
     if ensure_seeded() != 0 {
         return -1;
     }
-    let (mut ts, mut ra, mut t62) = (0u64, 0u16, 0u64);
+    let (mut ts, mut ra, mut t62) = (0_u64, 0_u16, 0_u64);
     advance_monotonic_with(now_ms(), &mut ts, &mut ra, &mut t62, || Ok(w1rand()));
     let (hi, lo) = build_words(ts, ra, t62);
     *high = hi;
@@ -159,7 +159,7 @@ pub fn build_uuid7_default_secure(high: &mut u64, low: &mut u64) -> c_int {
         return -1;
     }
 
-    let (mut ts, mut ra, mut t62) = (0u64, 0u16, 0u64);
+    let (mut ts, mut ra, mut t62) = (0_u64, 0_u16, 0_u64);
     if advance_monotonic_with(
         now_ms(),
         &mut ts,
@@ -221,7 +221,7 @@ pub fn build_uuid7_with_args(
     if ensure_seeded() != 0 {
         return -1;
     }
-    let (mut ra, mut t62) = (0u16, 0u64);
+    let (mut ra, mut t62) = (0_u16, 0_u64);
     let state =
         extract_random_bits_with(has_ts, has_nanos, nanos, &mut ra, &mut t62, || Ok(w1rand()));
 
@@ -249,7 +249,7 @@ pub fn build_uuid7_with_args_secure(
         return -1;
     }
 
-    let (mut ra, mut t62) = (0u16, 0u64);
+    let (mut ra, mut t62) = (0_u16, 0_u64);
     let state = extract_random_bits_with(has_ts, has_nanos, nanos, &mut ra, &mut t62, || {
         Ok(rnd_u64_secure())
     });

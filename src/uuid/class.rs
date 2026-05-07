@@ -170,7 +170,7 @@ pub extern "C" fn uuid_type_new(
         return ptr::null_mut();
     }
 
-    let (mut hi, mut lo) = (0u64, 0u64);
+    let (mut hi, mut lo) = (0_u64, 0_u64);
     if hex_obj != none {
         if parse_uuid(hex_obj, &mut hi, &mut lo) != 0 {
             return ptr::null_mut();
