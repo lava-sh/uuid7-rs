@@ -28,7 +28,7 @@ const fn hex_nibble(c: u8) -> i8 {
 }
 
 #[expect(clippy::large_stack_arrays)]
-const fn build_hex_pair() -> [i16; 65536] {
+const fn build_hex_pairs() -> [i16; 65536] {
     let mut tmp = [-1i16; 65536];
     let mut hi_c = 0u16;
 
@@ -57,4 +57,4 @@ const fn build_hex_pair() -> [i16; 65536] {
 }
 
 pub static HEX_WORDS: [u32; 65536] = build_hex_words();
-pub static HEX_PAIR: [i16; 65536] = build_hex_pair();
+pub static HEX_PAIRS: [i16; 65536] = build_hex_pairs();

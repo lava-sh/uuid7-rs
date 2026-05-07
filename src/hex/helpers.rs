@@ -1,13 +1,13 @@
 use std::{ffi::c_int, ptr};
 
-use crate::hex::table::{HEX_PAIR, HEX_WORDS};
+use crate::hex::table::{HEX_PAIRS, HEX_WORDS};
 
 #[expect(clippy::inline_always)]
 #[inline(always)]
 fn hex_byte_le(text: *const u8, pos: usize) -> i16 {
     unsafe {
         let i = ptr::read_unaligned(text.add(pos).cast::<u16>()) as usize;
-        *HEX_PAIR.get_unchecked(i)
+        *HEX_PAIRS.get_unchecked(i)
     }
 }
 
@@ -37,9 +37,9 @@ macro_rules! hex_word {
 #[expect(clippy::inline_always)]
 #[inline(always)]
 fn parse_hex32(py_str: &[u8], hi: &mut u64, lo: &mut u64) -> c_int {
-    let py_str = py_str.as_ptr();
-    *hi = hex_word!(py_str, 0, 2, 4, 6, 8, 10, 12, 14);
-    *lo = hex_word!(py_str, 16, 18, 20, 22, 24, 26, 28, 30);
+    let ptr = py_str.as_ptr();
+    *hi = hex_word!(ptr, 0, 2, 4, 6, 8, 10, 12, 14);
+    *lo = hex_word!(ptr, 16, 18, 20, 22, 24, 26, 28, 30);
     0
 }
 
@@ -107,32 +107,32 @@ fn hex_word(bytes: u16) -> u64 {
 
 #[expect(clippy::inline_always)]
 #[inline(always)]
-fn write_u32(buf: *mut u8, pos: usize, value: u32) {
-    unsafe { ptr::write_unaligned(buf.add(pos).cast::<u32>(), value) };
+fn hex_words(x: u64) -> [u64; 4] {
+    [
+        hex_word((x >> 48) as u16),
+        hex_word((x >> 32) as u16),
+        hex_word((x >> 16) as u16),
+        hex_word(x as u16),
+    ]
 }
 
-#[expect(clippy::inline_always)]
-#[inline(always)]
-fn write_u64(buf: *mut u8, pos: usize, value: u64) {
-    unsafe { ptr::write_unaligned(buf.add(pos).cast::<u64>(), value) };
+macro_rules! write_unaligned {
+    ($buf:expr, $pos:expr, $val:expr) => {
+        unsafe { ptr::write_unaligned($buf.add($pos).cast(), $val) }
+    };
 }
 
 #[expect(clippy::inline_always)]
 #[inline(always)]
 pub fn fmt_hex32(high: u64, low: u64, buf: &mut [u8]) {
     let ptr = buf.as_mut_ptr();
-    let hw_h_3 = hex_word((high >> 48) as u16);
-    let hw_h_2 = hex_word((high >> 32) as u16);
-    let hw_h_1 = hex_word((high >> 16) as u16);
-    let hw_h_0 = hex_word(high as u16);
-    let hw_l_3 = hex_word((low >> 48) as u16);
-    let hw_l_2 = hex_word((low >> 32) as u16);
-    let hw_l_1 = hex_word((low >> 16) as u16);
-    let hw_l_0 = hex_word(low as u16);
-    write_u64(ptr, 0, hw_h_3 | (hw_h_2 << 32));
-    write_u64(ptr, 8, hw_h_1 | (hw_h_0 << 32));
-    write_u64(ptr, 16, hw_l_3 | (hw_l_2 << 32));
-    write_u64(ptr, 24, hw_l_1 | (hw_l_0 << 32));
+    let hi = hex_words(high);
+    let lo = hex_words(low);
+
+    write_unaligned!(ptr, 0, hi[0] | (hi[1] << 32));
+    write_unaligned!(ptr, 8, hi[2] | (hi[3] << 32));
+    write_unaligned!(ptr, 16, lo[0] | (lo[1] << 32));
+    write_unaligned!(ptr, 24, lo[2] | (lo[3] << 32));
 }
 
 #[inline(always)]
@@ -140,23 +140,20 @@ pub fn fmt_dashed(high: u64, low: u64, buf: &mut [u8]) {
     const DASH: u64 = b'-' as u64;
 
     let ptr = buf.as_mut_ptr();
-    let hw_h_3 = hex_word((high >> 48) as u16);
-    let hw_h_2 = hex_word((high >> 32) as u16);
-    let hw_h_1 = hex_word((high >> 16) as u16);
-    let hw_h_0 = hex_word(high as u16);
-    let hw_l_3 = hex_word((low >> 48) as u16);
-    let hw_l_2 = hex_word((low >> 32) as u16);
-    let hw_l_1 = hex_word((low >> 16) as u16);
-    let hw_l_0 = hex_word(low as u16);
+    let hi = hex_words(high);
+    let lo = hex_words(low);
 
-    let chunk0 = hw_h_3 | (hw_h_2 << 32);
-    let chunk1 = DASH | (hw_h_1 << 8) | (DASH << 40) | ((hw_h_0 & 0xFFFF) << 48);
-    let chunk2 = (hw_h_0 >> 16) | (DASH << 16) | (hw_l_3 << 24) | (DASH << 56);
-    let chunk3 = hw_l_2 | (hw_l_1 << 32);
-
-    write_u64(ptr, 0, chunk0);
-    write_u64(ptr, 8, chunk1);
-    write_u64(ptr, 16, chunk2);
-    write_u64(ptr, 24, chunk3);
-    write_u32(ptr, 32, hw_l_0 as u32);
+    write_unaligned!(ptr, 0, hi[0] | (hi[1] << 32));
+    write_unaligned!(
+        ptr,
+        8,
+        DASH | (hi[2] << 8) | (DASH << 40) | ((hi[3] & 0xFFFF) << 48)
+    );
+    write_unaligned!(
+        ptr,
+        16,
+        (hi[3] >> 16) | (DASH << 16) | (lo[0] << 24) | (DASH << 56)
+    );
+    write_unaligned!(ptr, 24, lo[1] | (lo[2] << 32));
+    write_unaligned!(ptr, 32, lo[3] as u32);
 }
