@@ -7,7 +7,6 @@ BUILD_ROOT="${BUILD_ROOT:-${RUNNER_TEMP:-${HOME}/.cache/uuid7-rs-cpython-15-bit}
 PY_PREFIX="${PY_PREFIX:-${BUILD_ROOT}/python314_15bit}"
 VENV="${VENV:-${BUILD_ROOT}/.venv-15-bit}"
 WHEEL_DIR="${WHEEL_DIR:-${BUILD_ROOT}/wheel}"
-JOBS="${JOBS:-$(python3 -c 'import os; print(os.cpu_count() or 2)')}"
 ARCHIVE="${BUILD_ROOT}/Python-${PYTHON_VERSION}.tgz"
 SRC="${BUILD_ROOT}/Python-${PYTHON_VERSION}"
 
@@ -48,7 +47,7 @@ if [[ ! -x "${PY_PREFIX}/bin/python3.14" ]]; then
             --enable-big-digits=15 \
             --with-pydebug \
             LDFLAGS="-Wl,-rpath,${PY_PREFIX}/lib"
-        make -j"${JOBS}"
+        make -j"$(nproc)"
         make install
     )
     rm -rf "${SRC}" "${ARCHIVE}"
@@ -59,7 +58,7 @@ python3.14 -c "import sys; print('PYTHON_VERSION', sys.version); print('INT_INFO
 
 cd "${REPO_ROOT}"
 rm -rf "${VENV}" "${WHEEL_DIR}"
-uv venv "${VENV}" --python python3.14
+uv venv "${VENV}" --python "${PY_PREFIX}/bin/python3.14"
 PYTHON="${VENV}/bin/python"
 export PATH="${VENV}/bin:${PATH}"
 export PYO3_PYTHON="${PYTHON}"
