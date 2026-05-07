@@ -128,7 +128,7 @@ jobs:
   tests:
     uses: ./.github/workflows/tests.yaml
 
-  tests-python-15-bit:
+  tests-15-bit-python:
     name: "python 3.14.4 / 15-bit digits"
     runs-on: ubuntu-latest
     steps:
@@ -145,23 +145,23 @@ jobs:
         run: bash .github/scripts/15-bit.sh
 
   linux:
-    needs: [ tests, cargo-fmt, cargo-clippy, zizmor, typos, rumdl ]
+    needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, zizmor, typos, rumdl ]
     uses: ./.github/workflows/linux.yaml
 
   musllinux:
-    needs: [ tests, cargo-fmt, cargo-clippy, zizmor, typos, rumdl ]
+    needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, zizmor, typos, rumdl ]
     uses: ./.github/workflows/musllinux.yaml
 
   windows:
-    needs: [ tests, cargo-fmt, cargo-clippy, zizmor, typos, rumdl ]
+    needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, zizmor, typos, rumdl ]
     uses: ./.github/workflows/windows.yaml
 
   macos:
-    needs: [ tests, cargo-fmt, cargo-clippy, zizmor, typos, rumdl ]
+    needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, zizmor, typos, rumdl ]
     uses: ./.github/workflows/macos.yaml
 
   wasm:
-    needs: [ tests, cargo-fmt, cargo-clippy, zizmor, typos, rumdl ]
+    needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, zizmor, typos, rumdl ]
     uses: ./.github/workflows/wasm.yaml
 
   build-sdist:
