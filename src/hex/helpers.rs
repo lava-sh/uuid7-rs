@@ -1,14 +1,23 @@
-use std::ffi::c_int;
+use std::{ffi::c_int, ptr};
 
-use crate::hex::table::{HEX_PAIR_TO_BYTE, HEX_PAIRS};
+use crate::hex::table::{HEX_PAIR, HEX_WORDS};
+
+#[expect(clippy::inline_always)]
+#[inline(always)]
+fn hex_byte_le(text: *const u8, pos: usize) -> i16 {
+    unsafe {
+        let i = ptr::read_unaligned(text.add(pos).cast::<u16>()) as usize;
+        *HEX_PAIR.get_unchecked(i)
+    }
+}
 
 macro_rules! hex_byte {
     ($text:expr, $pos:expr) => {{
-        let v = HEX_PAIR_TO_BYTE[($text[$pos] as usize) << 8 | $text[$pos + 1] as usize];
-        if v < 0 {
+        let x = hex_byte_le($text, $pos);
+        if x < 0 {
             return -1;
         }
-        u64::from(v.cast_unsigned())
+        u64::from(x.cast_unsigned())
     }};
 }
 
@@ -25,56 +34,57 @@ macro_rules! hex_word {
     };
 }
 
-#[inline]
-pub fn hex_pair(buf: &mut [u8], pos: usize, byte: u8) {
-    let i = byte as usize * 2;
+#[expect(clippy::inline_always)]
+#[inline(always)]
+fn parse_hex32(py_str: &[u8], hi: &mut u64, lo: &mut u64) -> c_int {
+    let py_str = py_str.as_ptr();
+    *hi = hex_word!(py_str, 0, 2, 4, 6, 8, 10, 12, 14);
+    *lo = hex_word!(py_str, 16, 18, 20, 22, 24, 26, 28, 30);
+    0
+}
+
+#[expect(clippy::inline_always)]
+#[inline(always)]
+fn parse_dashed(py_str: &[u8], hi: &mut u64, lo: &mut u64) -> c_int {
+    let ptr = py_str.as_ptr();
+    let dashes = unsafe {
+        (*ptr.add(8) ^ b'-') | (*ptr.add(13) ^ b'-') | (*ptr.add(18) ^ b'-') | (*ptr.add(23) ^ b'-')
+    };
+    if dashes != 0 {
+        return -1;
+    }
+    *hi = hex_word!(ptr, 0, 2, 4, 6, 9, 11, 14, 16);
+    *lo = hex_word!(ptr, 19, 21, 24, 26, 28, 30, 32, 34);
+    0
+}
+
+#[expect(clippy::inline_always)]
+#[inline(always)]
+fn is_urn_uuid(py_str: &[u8]) -> bool {
+    let ptr = py_str.as_ptr();
     unsafe {
-        *buf.get_unchecked_mut(pos) = *HEX_PAIRS.get_unchecked(i);
-        *buf.get_unchecked_mut(pos + 1) = *HEX_PAIRS.get_unchecked(i + 1);
+        (*ptr.add(0) | 0x20) == b'u'
+            && (*ptr.add(1) | 0x20) == b'r'
+            && (*ptr.add(2) | 0x20) == b'n'
+            && *ptr.add(3) == b':'
+            && (*ptr.add(4) | 0x20) == b'u'
+            && (*ptr.add(5) | 0x20) == b'u'
+            && (*ptr.add(6) | 0x20) == b'i'
+            && (*ptr.add(7) | 0x20) == b'd'
+            && *ptr.add(8) == b':'
     }
 }
 
-#[inline]
-pub fn fmt_dashed(high: u64, low: u64, buf: &mut [u8]) {
-    let hi = high.to_be_bytes();
-    let lo = low.to_be_bytes();
-    hex_pair(buf, 0, hi[0]);
-    hex_pair(buf, 2, hi[1]);
-    hex_pair(buf, 4, hi[2]);
-    hex_pair(buf, 6, hi[3]);
-    buf[8] = b'-';
-    hex_pair(buf, 9, hi[4]);
-    hex_pair(buf, 11, hi[5]);
-    buf[13] = b'-';
-    hex_pair(buf, 14, hi[6]);
-    hex_pair(buf, 16, hi[7]);
-    buf[18] = b'-';
-    hex_pair(buf, 19, lo[0]);
-    hex_pair(buf, 21, lo[1]);
-    buf[23] = b'-';
-    hex_pair(buf, 24, lo[2]);
-    hex_pair(buf, 26, lo[3]);
-    hex_pair(buf, 28, lo[4]);
-    hex_pair(buf, 30, lo[5]);
-    hex_pair(buf, 32, lo[6]);
-    hex_pair(buf, 34, lo[7]);
-}
-
-pub fn fmt_hex32(high: u64, low: u64, buf: &mut [u8]) {
-    let hi = high.to_be_bytes();
-    let lo = low.to_be_bytes();
-
-    for (i, byte) in hi.iter().enumerate() {
-        hex_pair(buf, i * 2, *byte);
-    }
-
-    for (i, byte) in lo.iter().enumerate() {
-        hex_pair(buf, 16 + i * 2, *byte);
-    }
-}
-
+#[expect(clippy::inline_always)]
+#[inline(always)]
 pub fn parse_uuid_hex_str(mut py_str: &[u8], hi: &mut u64, lo: &mut u64) -> c_int {
-    if py_str.len() >= 9 && py_str[..9].eq_ignore_ascii_case(b"urn:uuid:") {
+    match py_str.len() {
+        32 => return parse_hex32(py_str, hi, lo),
+        36 => return parse_dashed(py_str, hi, lo),
+        _ => {}
+    }
+
+    if py_str.len() >= 9 && is_urn_uuid(py_str) {
         py_str = &py_str[9..];
     }
 
@@ -83,19 +93,70 @@ pub fn parse_uuid_hex_str(mut py_str: &[u8], hi: &mut u64, lo: &mut u64) -> c_in
     }
 
     match py_str.len() {
-        32 => {
-            *hi = hex_word!(py_str, 0, 2, 4, 6, 8, 10, 12, 14);
-            *lo = hex_word!(py_str, 16, 18, 20, 22, 24, 26, 28, 30);
-            0
-        }
-        36 => {
-            if py_str[8] != b'-' || py_str[13] != b'-' || py_str[18] != b'-' || py_str[23] != b'-' {
-                return -1;
-            }
-            *hi = hex_word!(py_str, 0, 2, 4, 6, 9, 11, 14, 16);
-            *lo = hex_word!(py_str, 19, 21, 24, 26, 28, 30, 32, 34);
-            0
-        }
+        32 => parse_hex32(py_str, hi, lo),
+        36 => parse_dashed(py_str, hi, lo),
         _ => -1,
     }
+}
+
+#[expect(clippy::inline_always)]
+#[inline(always)]
+fn hex_word(bytes: u16) -> u64 {
+    u64::from(unsafe { *HEX_WORDS.get_unchecked(bytes as usize) })
+}
+
+#[expect(clippy::inline_always)]
+#[inline(always)]
+fn write_u32(buf: *mut u8, pos: usize, value: u32) {
+    unsafe { ptr::write_unaligned(buf.add(pos).cast::<u32>(), value) };
+}
+
+#[expect(clippy::inline_always)]
+#[inline(always)]
+fn write_u64(buf: *mut u8, pos: usize, value: u64) {
+    unsafe { ptr::write_unaligned(buf.add(pos).cast::<u64>(), value) };
+}
+
+#[expect(clippy::inline_always)]
+#[inline(always)]
+pub fn fmt_hex32(high: u64, low: u64, buf: &mut [u8]) {
+    let ptr = buf.as_mut_ptr();
+    let hw_h_3 = hex_word((high >> 48) as u16);
+    let hw_h_2 = hex_word((high >> 32) as u16);
+    let hw_h_1 = hex_word((high >> 16) as u16);
+    let hw_h_0 = hex_word(high as u16);
+    let hw_l_3 = hex_word((low >> 48) as u16);
+    let hw_l_2 = hex_word((low >> 32) as u16);
+    let hw_l_1 = hex_word((low >> 16) as u16);
+    let hw_l_0 = hex_word(low as u16);
+    write_u64(ptr, 0, hw_h_3 | (hw_h_2 << 32));
+    write_u64(ptr, 8, hw_h_1 | (hw_h_0 << 32));
+    write_u64(ptr, 16, hw_l_3 | (hw_l_2 << 32));
+    write_u64(ptr, 24, hw_l_1 | (hw_l_0 << 32));
+}
+
+#[inline(always)]
+pub fn fmt_dashed(high: u64, low: u64, buf: &mut [u8]) {
+    const DASH: u64 = b'-' as u64;
+
+    let ptr = buf.as_mut_ptr();
+    let hw_h_3 = hex_word((high >> 48) as u16);
+    let hw_h_2 = hex_word((high >> 32) as u16);
+    let hw_h_1 = hex_word((high >> 16) as u16);
+    let hw_h_0 = hex_word(high as u16);
+    let hw_l_3 = hex_word((low >> 48) as u16);
+    let hw_l_2 = hex_word((low >> 32) as u16);
+    let hw_l_1 = hex_word((low >> 16) as u16);
+    let hw_l_0 = hex_word(low as u16);
+
+    let chunk0 = hw_h_3 | (hw_h_2 << 32);
+    let chunk1 = DASH | (hw_h_1 << 8) | (DASH << 40) | ((hw_h_0 & 0xFFFF) << 48);
+    let chunk2 = (hw_h_0 >> 16) | (DASH << 16) | (hw_l_3 << 24) | (DASH << 56);
+    let chunk3 = hw_l_2 | (hw_l_1 << 32);
+
+    write_u64(ptr, 0, chunk0);
+    write_u64(ptr, 8, chunk1);
+    write_u64(ptr, 16, chunk2);
+    write_u64(ptr, 24, chunk3);
+    write_u32(ptr, 32, hw_l_0 as u32);
 }

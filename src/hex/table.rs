@@ -1,11 +1,17 @@
-const fn build_hex_pairs() -> [u8; 512] {
-    let hex_digits = b"0123456789abcdef";
-    let mut tmp = [0u8; 512];
+const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
+
+#[expect(clippy::large_stack_arrays, clippy::large_stack_frames)]
+const fn build_hex_words() -> [u32; 65536] {
+    let mut tmp = [0u32; 65536];
     let mut i = 0usize;
 
-    while i < 256 {
-        tmp[i * 2] = hex_digits[i >> 4];
-        tmp[i * 2 + 1] = hex_digits[i & 0x0f];
+    while i < 65536 {
+        tmp[i] = u32::from_ne_bytes([
+            HEX_DIGITS[(i >> 12) & 0x0f],
+            HEX_DIGITS[(i >> 8) & 0x0f],
+            HEX_DIGITS[(i >> 4) & 0x0f],
+            HEX_DIGITS[i & 0x0f],
+        ]);
         i += 1;
     }
 
@@ -22,32 +28,33 @@ const fn hex_nibble(c: u8) -> i8 {
 }
 
 #[expect(clippy::large_stack_arrays)]
-const fn build_hex_pair_to_byte() -> [i16; 65536] {
+const fn build_hex_pair() -> [i16; 65536] {
     let mut tmp = [-1i16; 65536];
-    let mut i = 0u16;
+    let mut hi_c = 0u16;
 
-    while i < 256 {
-        let hn = hex_nibble(i as u8);
+    while hi_c < 256 {
+        let hn = hex_nibble(hi_c as u8);
 
         if hn >= 0 {
-            let mut l = 0u16;
+            let mut lo_c = 0u16;
 
-            while l < 256 {
-                let ln = hex_nibble(l as u8);
+            while lo_c < 256 {
+                let ln = hex_nibble(lo_c as u8);
 
                 if ln >= 0 {
-                    tmp[(i << 8 | l) as usize] = ((hn as i16) << 4) | ln as i16;
+                    let idx = hi_c | (lo_c << 8);
+                    tmp[idx as usize] = ((hn as i16) << 4) | ln as i16;
                 }
 
-                l += 1;
+                lo_c += 1;
             }
         }
 
-        i += 1;
+        hi_c += 1;
     }
 
     tmp
 }
 
-pub static HEX_PAIRS: [u8; 512] = build_hex_pairs();
-pub static HEX_PAIR_TO_BYTE: [i16; 65536] = build_hex_pair_to_byte();
+pub static HEX_WORDS: [u32; 65536] = build_hex_words();
+pub static HEX_PAIR: [i16; 65536] = build_hex_pair();
