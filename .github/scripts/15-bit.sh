@@ -40,8 +40,7 @@ if [[ ! -x "${PY_PREFIX}/bin/python3.14" ]]; then
     rm -rf "${SRC}"
 fi
 
-echo 'RUN python3.14 -c "import sys; print('\''PYTHON_VERSION'\'', sys.version); print('\''INT_INFO'\'', sys.int_info); assert sys.int_info.bits_per_digit == 15"'
-python3.14 -c "import sys; print('PYTHON_VERSION', sys.version); print('INT_INFO', sys.int_info); assert sys.int_info.bits_per_digit == 15"
+python3.14 -c "import sys; print('Python:', sys.version); print(sys.int_info); assert sys.int_info.bits_per_digit == 15"
 
 cd "${REPO_ROOT}"
 rm -rf "${VENV}" "${WHEEL_DIR}"
