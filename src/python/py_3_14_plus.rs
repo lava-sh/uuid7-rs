@@ -84,11 +84,7 @@ pub fn is_30bit_layout() -> bool {
     static DIGITS: OnceLock<bool> = OnceLock::new();
 
     *DIGITS.get_or_init(|| {
-        let layout = unsafe { PyLong_GetNativeLayout() };
-        if layout.is_null() {
-            return false;
-        }
-        let layout = unsafe { &*layout };
+        let layout = unsafe { &*PyLong_GetNativeLayout() };
         layout.bits_per_digit == PYLONG_BITS_IN_DIGIT
     })
 }
