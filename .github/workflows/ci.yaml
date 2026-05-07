@@ -129,7 +129,7 @@ jobs:
     uses: ./.github/workflows/tests.yaml
 
   tests-15-bit-python:
-    name: "python 3.14.4 / 15-bit digits"
+    name: "tests / ubuntu-latest / python 3.14.4 / 15-bit digits"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
