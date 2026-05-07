@@ -32,7 +32,7 @@ fn uuid7_parts(
     };
 
     if nargs == 0 && nkw == 0 {
-        let (mut hi, mut lo) = (0u64, 0u64);
+        let (mut hi, mut lo) = (0_u64, 0_u64);
         if build_uuid7_default(&mut hi, &mut lo) != 0 {
             return None;
         }
@@ -115,7 +115,7 @@ fn uuid7_parts(
     };
 
     if secure && ts == none && nanos == none {
-        let (mut hi, mut lo) = (0u64, 0u64);
+        let (mut hi, mut lo) = (0_u64, 0_u64);
 
         if build_uuid7_default_secure(&mut hi, &mut lo) != 0 {
             return None;
@@ -144,7 +144,7 @@ fn uuid7_parts(
         Err(()) => return None,
     };
 
-    let (mut hi, mut lo) = (0u64, 0u64);
+    let (mut hi, mut lo) = (0_u64, 0_u64);
 
     let mode = if secure {
         build_uuid7_with_args_secure(

@@ -113,7 +113,7 @@ pub fn parse_uuid_bytes(value: *mut PyObject, le: bool, hi: &mut u64, lo: &mut u
     let ptr = buf as *const u8;
 
     if le {
-        let mut reordered = [0u8; 16];
+        let mut reordered = [0_u8; 16];
         uuid_to_bytes_le_ptr(ptr, reordered.as_mut_ptr());
         bytes_to_hilo(reordered.as_ptr(), hi, lo);
     } else {
@@ -209,7 +209,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         return 0;
     }
 
-    let mut bytes = [0u8; 16];
+    let mut bytes = [0_u8; 16];
     let rc = {
         #[cfg(Py_3_13)]
         unsafe {
@@ -274,7 +274,7 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
         PyValueError::new_err(c"fields is not a 6-tuple");
         return -1;
     }
-    let mut parts = [0u64; 6];
+    let mut parts = [0_u64; 6];
 
     for i in 0usize..6 {
         let item = {
