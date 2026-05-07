@@ -63,8 +63,7 @@ PYTHON="${VENV}/bin/python"
 export PATH="${VENV}/bin:${PATH}"
 export PYO3_PYTHON="${PYTHON}"
 
-uv pip install --python "${PYTHON}" --group ci
+uv pip install --python "${PYTHON}" --group pytest --group maturin
 maturin build --out "${WHEEL_DIR}" --release
 uv pip install --python "${PYTHON}" --force-reinstall "${WHEEL_DIR}"/*.whl
-ruff check
 pytest tests/
