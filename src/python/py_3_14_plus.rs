@@ -94,6 +94,10 @@ pub fn is_30bit_layout() -> bool {
 }
 
 pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
+    if !is_30bit_layout() {
+        return super::py_3_13::uuid_int_from_parts(hi, lo);
+    }
+
     const SHIFT: u32 = PYLONG_BITS_IN_DIGIT as u32;
     const MASK: u64 = (1 << SHIFT) - 1;
 
