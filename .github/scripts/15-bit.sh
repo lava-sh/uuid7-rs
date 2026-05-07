@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PYTHON_VERSION="${PYTHON_VERSION:-3.14.4}"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+BUILD_ROOT="${BUILD_ROOT:-${RUNNER_TEMP:-${HOME}/.cache/uuid7-rs-cpython-15-bit}}"
+PY_PREFIX="${PY_PREFIX:-${BUILD_ROOT}/python314_15bit}"
+VENV="${VENV:-${BUILD_ROOT}/.venv-15-bit}"
+WHEEL_DIR="${WHEEL_DIR:-${BUILD_ROOT}/wheel}"
+JOBS="${JOBS:-$(python3 -c 'import os; print(os.cpu_count() or 2)')}"
+ARCHIVE="${BUILD_ROOT}/Python-${PYTHON_VERSION}.tgz"
+SRC="${BUILD_ROOT}/Python-${PYTHON_VERSION}"
+
+export LD_LIBRARY_PATH="${PY_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
+export PATH="${PY_PREFIX}/bin:${HOME}/.local/bin:${PATH}"
+
+if command -v apt-get >/dev/null; then
+    sudo apt-get update
+    sudo apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        clang \
+        curl \
+        git \
+        libbz2-dev \
+        libffi-dev \
+        liblzma-dev \
+        libreadline-dev \
+        libsqlite3-dev \
+        libssl-dev \
+        pkg-config \
+        wget \
+        xz-utils \
+        zlib1g-dev
+fi
+
+mkdir -p "${BUILD_ROOT}"
+
+if [[ ! -x "${PY_PREFIX}/bin/python3.14" ]]; then
+    rm -rf "${SRC}" "${PY_PREFIX}"
+    wget -qO "${ARCHIVE}" "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz"
+    tar xf "${ARCHIVE}" -C "${BUILD_ROOT}"
+    (
+        cd "${SRC}"
+        ./configure \
+            --prefix="${PY_PREFIX}" \
+            --enable-shared \
+            --enable-big-digits=15 \
+            --with-pydebug \
+            LDFLAGS="-Wl,-rpath,${PY_PREFIX}/lib"
+        make -j"${JOBS}"
+        make install
+    )
+    rm -rf "${SRC}" "${ARCHIVE}"
+fi
+
+echo 'RUN python3.14 -c "import sys; print('\''PYTHON_VERSION'\'', sys.version); print('\''INT_INFO'\'', sys.int_info); assert sys.int_info.bits_per_digit == 15"'
+python3.14 -c "import sys; print('PYTHON_VERSION', sys.version); print('INT_INFO', sys.int_info); assert sys.int_info.bits_per_digit == 15"
+
+cd "${REPO_ROOT}"
+rm -rf "${VENV}" "${WHEEL_DIR}"
+uv venv "${VENV}" --python python3.14
+PYTHON="${VENV}/bin/python"
+export PATH="${VENV}/bin:${PATH}"
+export PYO3_PYTHON="${PYTHON}"
+
+uv pip install --python "${PYTHON}" --group ci
+maturin build --out "${WHEEL_DIR}" --release
+uv pip install --python "${PYTHON}" --force-reinstall "${WHEEL_DIR}"/*.whl
+ruff check
+pytest tests/
