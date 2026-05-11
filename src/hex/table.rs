@@ -1,7 +1,7 @@
-const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
-
 #[expect(clippy::large_stack_arrays, clippy::large_stack_frames)]
 const fn build_hex_words() -> [u32; 65536] {
+    const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
+
     let mut tmp = [0; 65536];
     let mut i = 0;
 
