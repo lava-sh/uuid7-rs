@@ -1,9 +1,9 @@
-const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
-
 #[expect(clippy::large_stack_arrays, clippy::large_stack_frames)]
 const fn build_hex_words() -> [u32; 65536] {
-    let mut tmp = [0u32; 65536];
-    let mut i = 0usize;
+    const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
+
+    let mut tmp = [0; 65536];
+    let mut i = 0;
 
     while i < 65536 {
         tmp[i] = u32::from_ne_bytes([
@@ -29,14 +29,14 @@ const fn hex_nibble(c: u8) -> i8 {
 
 #[expect(clippy::large_stack_arrays)]
 const fn build_hex_pairs() -> [i16; 65536] {
-    let mut tmp = [-1i16; 65536];
-    let mut hi_c = 0u16;
+    let mut tmp = [-1_i16; 65536];
+    let mut hi_c = 0_u16;
 
     while hi_c < 256 {
         let hn = hex_nibble(hi_c as u8);
 
         if hn >= 0 {
-            let mut lo_c = 0u16;
+            let mut lo_c = 0_u16;
 
             while lo_c < 256 {
                 let ln = hex_nibble(lo_c as u8);
