@@ -132,17 +132,11 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
 
     #[cfg(all(Py_3_14, not(PyPy)))]
     if crate::python::ffi::is_30bit_layout() {
-        use std::ptr::{self, addr_of_mut};
+        use std::ptr::addr_of_mut;
 
-        use crate::python::ffi::{PyLong_Export, PyLong_FreeExport, PyLongExport};
+        use pyo3::ffi::{PyLong_Export, PyLong_FreeExport, PyLongExport};
 
-        let mut long_export = PyLongExport {
-            value: 0,
-            negative: 0,
-            ndigits: 0,
-            digits: ptr::null(),
-            _reserved: 0,
-        };
+        let mut long_export: PyLongExport = unsafe { std::mem::zeroed() };
 
         if unsafe { PyLong_Export(value, addr_of_mut!(long_export)) } < 0 {
             unsafe { PyErr_Clear() };

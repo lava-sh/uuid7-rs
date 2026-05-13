@@ -1,83 +1,12 @@
 use std::{
-    ffi::{c_int, c_void},
+    ffi::c_void,
     ptr::{addr_of_mut, null_mut},
     sync::OnceLock,
 };
 
-use pyo3::ffi::{Py_ssize_t, Py_uintptr_t, PyObject};
+use pyo3::ffi::{PyLong_GetNativeLayout, PyLongWriter_Create, PyLongWriter_Finish, PyObject};
 
-macro_rules! extern_libpython {
-        (dlls: [$($dll:literal),* $(,)?] { $($body:item)* }) => {
-            $(
-                #[cfg_attr(
-                    all(windows, target_arch = "x86", pyo3_dll = $dll),
-                    link(name = $dll, kind = "raw-dylib", import_name_type = "undecorated")
-                )]
-                #[cfg_attr(
-                    all(windows, not(target_arch = "x86"), pyo3_dll = $dll),
-                    link(name = $dll, kind = "raw-dylib")
-                )]
-            )*
-            unsafe extern "C" {
-                $($body)*
-            }
-        };
-    }
-
-#[repr(C)]
-struct PyLongWriter([u8; 0]);
-
-const PYLONG_BITS_IN_DIGIT: u8 = 30;
-
-// https://docs.python.org/3/c-api/long.html#c.PyLong_GetNativeLayout
-#[repr(C)]
-struct PyLongLayout {
-    bits_per_digit: u8,
-    digit_size: u8,
-    digits_order: i8,
-    digit_endianness: i8,
-}
-
-#[repr(C)]
-pub struct PyLongExport {
-    pub value: i64,
-    pub negative: u8,
-    pub ndigits: Py_ssize_t,
-    pub digits: *const c_void,
-    pub _reserved: Py_uintptr_t,
-}
-
-extern_libpython! {
-    dlls: [
-        "python314",
-        "python314_d",
-        "python315",
-        "python315_d",
-    ]
-    {
-        // https://docs.python.org/3/c-api/long.html#c.PyLong_GetNativeLayout
-        fn PyLong_GetNativeLayout() -> *const PyLongLayout;
-
-        // https://docs.python.org/3/c-api/long.html#c.PyLongWriter_Create
-        fn PyLongWriter_Create(
-            negative: c_int,
-            ndigits: Py_ssize_t,
-            digits: *mut *mut c_void,
-        ) -> *mut PyLongWriter;
-
-        // https://docs.python.org/3/c-api/long.html#c.PyLongWriter_Finish
-        fn PyLongWriter_Finish(writer: *mut PyLongWriter) -> *mut PyObject;
-
-        // https://docs.python.org/3/c-api/long.html#c.PyLong_Export
-       pub fn PyLong_Export(
-            obj: *mut PyObject,
-            export_long: *mut PyLongExport,
-        ) -> c_int;
-
-        // https://docs.python.org/3/c-api/long.html#c.PyLong_FreeExport
-        pub fn PyLong_FreeExport(export_long: *mut PyLongExport);
-    }
-}
+const PYLONG_BITS_IN_DIGIT: u32 = 30;
 
 #[must_use]
 pub fn is_30bit_layout() -> bool {
@@ -85,12 +14,12 @@ pub fn is_30bit_layout() -> bool {
 
     *DIGITS.get_or_init(|| {
         let layout = unsafe { &*PyLong_GetNativeLayout() };
-        layout.bits_per_digit == PYLONG_BITS_IN_DIGIT
+        layout.bits_per_digit == PYLONG_BITS_IN_DIGIT as u8
     })
 }
 
 pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
-    const SHIFT: u32 = PYLONG_BITS_IN_DIGIT as u32;
+    const SHIFT: u32 = PYLONG_BITS_IN_DIGIT;
     const MASK: u64 = (1 << SHIFT) - 1;
 
     if !is_30bit_layout() {
