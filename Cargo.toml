@@ -2,6 +2,7 @@
 name = "uuid7-rs"
 version = "0.0.7"
 edition = "2024"
+build = "build.rs"
 
 [lib]
 name = "_core"
