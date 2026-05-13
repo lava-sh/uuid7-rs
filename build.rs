@@ -9,12 +9,12 @@ fn main() {
 
     let config = pyo3_build_config::get();
 
-    if let Some(lib_name) = config.lib_name.as_ref() {
+    if let Some(lib_name) = config.lib_name().as_ref() {
         println!("cargo:rustc-cfg=pyo3_dll=\"{lib_name}\"");
-    } else if config.implementation == PythonImplementation::CPython && !config.is_free_threaded() {
+    } else if config.implementation() == PythonImplementation::CPython && !config.is_free_threaded() {
         println!(
             "cargo:rustc-cfg=pyo3_dll=\"python{}{}\"",
-            config.version.major, config.version.minor
+            config.version().major, config.version().minor
         );
     }
 }
