@@ -12,11 +12,11 @@ crate-type = ["cdylib"]
 # pyo3-build-config = { version = "=0.29.0", features = ["resolve-config"] }
 [build-dependencies.pyo3-build-config]
 git = "https://github.com/PyO3/pyo3"
-rev = "c2f8c9a64a33ee15ed49a8fce3d66ac137858172"
+rev = "c92117c3ead44897cd6a0b4885e5853c9a6dea6e"
 
 [dependencies.pyo3]
 git = "https://github.com/PyO3/pyo3"
-rev = "c2f8c9a64a33ee15ed49a8fce3d66ac137858172"
+rev = "c92117c3ead44897cd6a0b4885e5853c9a6dea6e"
 # remove after pyo3 0.29.0 release
 features = ["generate-import-lib"]
 
