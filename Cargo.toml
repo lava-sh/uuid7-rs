@@ -1,6 +1,6 @@
 [package]
 name = "uuid7-rs"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2024"
 build = "build.rs"
 
@@ -12,11 +12,11 @@ crate-type = ["cdylib"]
 # pyo3-build-config = { version = "=0.29.0", features = ["resolve-config"] }
 [build-dependencies.pyo3-build-config]
 git = "https://github.com/PyO3/pyo3"
-rev = "c92117c3ead44897cd6a0b4885e5853c9a6dea6e"
+rev = "5323bc7009a9932471bc202cabd6e9a7d0ff7d85"
 
 [dependencies.pyo3]
 git = "https://github.com/PyO3/pyo3"
-rev = "c92117c3ead44897cd6a0b4885e5853c9a6dea6e"
+rev = "5323bc7009a9932471bc202cabd6e9a7d0ff7d85"
 # remove after pyo3 0.29.0 release
 features = ["generate-import-lib"]
 
