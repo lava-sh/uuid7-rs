@@ -14,7 +14,7 @@ def test_version(selenium: SeleniumType) -> None:
     dist = ROOT / "dist"
     with spawn_web_server(dist) as (host, port, _):
         url = f"http://{host}:{port}/"
-        wheel = next(dist.glob("toml_rs-*.whl")).name
+        wheel = next(dist.glob("uuid7_rs-*.whl")).name
         selenium.run_async(f"""
         import micropip
         await micropip.install("{url}{wheel}")
