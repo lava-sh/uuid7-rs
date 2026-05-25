@@ -12,6 +12,7 @@ windows_link::link!(
     "system"
     fn QueryInterruptTime(lpInterruptTime: *mut u64)
 );
+
 windows_link::link!(
     "kernel32"
     "system"
