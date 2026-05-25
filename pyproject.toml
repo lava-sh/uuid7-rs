@@ -36,9 +36,9 @@ urls.Homepage = "https://github.com/lava-sh/uuid7-rs"
 urls."Bug Tracker" = "https://github.com/lava-sh/uuid7-rs/issues"
 
 [dependency-groups]
-typos = ["typos == 1.46.2"]
+typos = ["typos == 1.46.3"]
 zizmor = ["zizmor == 1.25.2"]
-rumdl = ["rumdl == 0.1.94"]
+rumdl = ["rumdl == 0.2.0"]
 maturin = ["maturin == 1.13.3"]
 pytest = ["pytest == 9.0.3"]
 wasm-test = [
@@ -47,8 +47,8 @@ wasm-test = [
     "pytest-httpserver == 1.1.5",
 ]
 ci = [
-    "ty == 0.0.37",
-    "ruff == 0.15.13",
+    "ty == 0.0.39",
+    "ruff == 0.15.14",
     { include-group = "maturin" },
     { include-group = "pytest" },
 ]
@@ -67,7 +67,7 @@ bench = [
     "lastuuid == 0.5.0",
     "fastuuid == 0.14.0",
     # # # # # # # # # #
-    "polars == 1.40.1",
+    "polars == 1.41.0",
     "altair == 6.1.0",
     "py-cpuinfo == 9.0.0",
     "vl-convert-python == 1.9.0.post1",

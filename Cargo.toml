@@ -23,6 +23,9 @@ features = ["generate-import-lib"]
 [target."cfg(unix)".dependencies]
 libc = "=0.2.186"
 
+[target."cfg(windows)".dependencies]
+windows-link = "=0.2.1"
+
 [dependencies.rand]
 version = "=0.10.1"
 default-features = false
@@ -33,7 +36,7 @@ features = [
 
 [dependencies.mimalloc]
 optional = true
-version = "=0.1.50"
+version = "=0.1.52"
 features = [
     "override",
     "local_dynamic_tls",
