@@ -7,14 +7,12 @@ pub struct FILETIME {
     pub dwHighDateTime: u32,
 }
 
-windows_link::link!(
-    "mincore"
-    "system"
-    fn QueryInterruptTime(lpInterruptTime: *mut u64)
-);
+#[link(name = "kernel32")]
+unsafe extern "system" {
+    pub fn GetSystemTimePreciseAsFileTime(lpSystemTimeAsFileTime: *mut FILETIME);
+}
 
-windows_link::link!(
-    "kernel32"
-    "system"
-    fn GetSystemTimePreciseAsFileTime(lpSystemTimeAsFileTime: *mut FILETIME)
-);
+#[link(name = "mincore")]
+unsafe extern "system" {
+    pub fn QueryInterruptTime(lpInterruptTime: *mut u64);
+}
