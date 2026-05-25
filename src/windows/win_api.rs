@@ -9,7 +9,7 @@ pub struct FILETIME {
 
 // https://learn.microsoft.com/ru-ru/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryinterrupttime
 windows_link::link!(
-    "mincore.dll"
+    "api-ms-win-core-realtime-l1-1-1.dll"
     "system"
     fn QueryInterruptTime(lpInterruptTime: *mut u64)
 );
