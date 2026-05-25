@@ -7,12 +7,14 @@ pub struct FILETIME {
     pub dwHighDateTime: u32,
 }
 
+// https://learn.microsoft.com/ru-ru/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryinterrupttime
 windows_link::link!(
     "mincore.dll"
     "system"
     fn QueryInterruptTime(lpInterruptTime: *mut u64)
 );
 
+// https://learn.microsoft.com/ru-ru/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsystemtimepreciseasfiletime
 windows_link::link!(
     "kernel32.dll"
     "system"
