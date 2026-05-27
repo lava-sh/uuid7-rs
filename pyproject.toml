@@ -38,7 +38,7 @@ urls."Bug Tracker" = "https://github.com/lava-sh/uuid7-rs/issues"
 [dependency-groups]
 typos = ["typos == 1.46.3"]
 zizmor = ["zizmor == 1.25.2"]
-rumdl = ["rumdl == 0.2.0"]
+rumdl = ["rumdl == 0.2.2"]
 maturin = ["maturin == 1.13.3"]
 pytest = ["pytest == 9.0.3"]
 wasm-test = [
@@ -47,7 +47,7 @@ wasm-test = [
     "pytest-httpserver == 1.1.5",
 ]
 ci = [
-    "ty == 0.0.39",
+    "ty == 0.0.40",
     "ruff == 0.15.14",
     { include-group = "maturin" },
     { include-group = "pytest" },
