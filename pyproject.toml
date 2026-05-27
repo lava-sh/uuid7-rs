@@ -1,5 +1,5 @@
 [build-system]
-requires = ["maturin == 1.13.1"]
+requires = ["maturin == 1.13.3"]
 build-backend = "maturin"
 
 [tool.maturin]
@@ -36,14 +36,19 @@ urls.Homepage = "https://github.com/lava-sh/uuid7-rs"
 urls."Bug Tracker" = "https://github.com/lava-sh/uuid7-rs/issues"
 
 [dependency-groups]
-typos = ["typos == 1.46.0"]
-zizmor = ["zizmor == 1.24.1"]
-rumdl = ["rumdl == 0.1.91"]
-maturin = ["maturin == 1.13.1"]
+typos = ["typos == 1.46.3"]
+zizmor = ["zizmor == 1.25.2"]
+rumdl = ["rumdl == 0.2.2"]
+maturin = ["maturin == 1.13.3"]
 pytest = ["pytest == 9.0.3"]
+wasm-test = [
+    { include-group = "pytest" },
+    "pytest-pyodide == 0.59.2",
+    "pytest-httpserver == 1.1.5",
+]
 ci = [
-    "ty == 0.0.34",
-    "ruff == 0.15.12",
+    "ty == 0.0.40",
+    "ruff == 0.15.14",
     { include-group = "maturin" },
     { include-group = "pytest" },
 ]
@@ -55,15 +60,18 @@ dev = [
 ]
 bench = [
     "c_uuid_v7 == 0.0.11",
-    "uuid_utils == 0.14.1",
+    "uuid_utils == 0.16.0",
     "uuid_v7 == 1.0.0",
     "UUIDv7gen == 1.0.3",
     "uuid6 == 2025.0.1",
     "lastuuid == 0.5.0",
     "fastuuid == 0.14.0",
     # # # # # # # # # #
-    "polars == 1.40.1",
+    "polars == 1.41.0",
     "altair == 6.1.0",
     "py-cpuinfo == 9.0.0",
     "vl-convert-python == 1.9.0.post1",
 ]
+
+[tool.uv.dependency-groups]
+wasm-test = { requires-python = ">=3.11" }

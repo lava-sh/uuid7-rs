@@ -7,12 +7,16 @@ pub struct FILETIME {
     pub dwHighDateTime: u32,
 }
 
-#[link(name = "kernel32")]
-unsafe extern "system" {
-    pub fn GetSystemTimePreciseAsFileTime(lpSystemTimeAsFileTime: *mut FILETIME);
-}
+// https://learn.microsoft.com/ru-ru/windows/win32/api/realtimeapiset/nf-realtimeapiset-queryinterrupttime
+windows_link::link!(
+    "api-ms-win-core-realtime-l1-1-1.dll"
+    "system"
+    fn QueryInterruptTime(lpInterruptTime: *mut u64)
+);
 
-#[link(name = "mincore")]
-unsafe extern "system" {
-    pub fn QueryInterruptTime(lpInterruptTime: *mut u64);
-}
+// https://learn.microsoft.com/ru-ru/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsystemtimepreciseasfiletime
+windows_link::link!(
+    "kernel32.dll"
+    "system"
+    fn GetSystemTimePreciseAsFileTime(lpSystemTimeAsFileTime: *mut FILETIME)
+);

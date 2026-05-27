@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import TypeAlias
 
 import altair as alt
-import c_uuid_v7
 import cpuinfo
 import fastuuid
 import lastuuid
@@ -141,7 +140,6 @@ def plot_benchmark(
 def run(run_count: int) -> None:
     cases = {
         "uuid": (uuid.uuid7, "uuid"),
-        "c_uuid_v7": (c_uuid_v7.uuid7, "c_uuid_v7"),
         "uuid7_rs": (uuid7_rs.uuid7, "uuid7_rs"),
         "uuid_utils": (uuid_utils.uuid7, "uuid-utils"),
         "fastuuid": (fastuuid.uuid7, "fastuuid"),
@@ -152,7 +150,6 @@ def run(run_count: int) -> None:
     }
 
     compact_cases = {
-        "c_uuid_v7.compat": (c_uuid_v7.compat.uuid7, "c_uuid_v7"),
         "uuid7_rs.compat": (uuid7_rs.compat.uuid7, "uuid7_rs"),
         "uuid_utils.compat": (uuid_utils_compat.uuid7, "uuid-utils"),
         "uuid_v7": (uuid_v7_uuid7, "uuid-v7"),

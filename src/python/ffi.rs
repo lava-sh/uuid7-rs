@@ -22,6 +22,4 @@ pub use crate::python::py_3_10_plus::uuid_int_from_parts;
 pub use crate::python::py_3_13::uuid_int_from_parts;
 //
 #[cfg(all(Py_3_14, not(PyPy)))]
-pub use crate::python::py_3_14_plus::{
-    PyLong_Export, PyLong_FreeExport, PyLongExport, is_30bit_layout, uuid_int_from_parts,
-};
+pub use crate::python::py_3_14_plus::{is_30bit_layout, uuid_int_from_parts};
