@@ -47,7 +47,7 @@ wasm-test = [
     "pytest-httpserver == 1.1.5",
 ]
 ci = [
-    "ty == 0.0.40",
+    "ty == 0.0.41",
     "ruff == 0.15.15",
     { include-group = "maturin" },
     { include-group = "pytest" },
@@ -59,7 +59,6 @@ dev = [
     { include-group = "zizmor" },
 ]
 bench = [
-    "c_uuid_v7 == 0.0.11",
     "uuid_utils == 0.16.0",
     "uuid_v7 == 1.0.0",
     "UUIDv7gen == 1.0.3",
