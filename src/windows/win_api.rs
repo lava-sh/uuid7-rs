@@ -1,3 +1,5 @@
+#![expect(clippy::upper_case_acronyms)]
+
 #[repr(C)]
 #[derive(Default)]
 pub struct FILETIME {
