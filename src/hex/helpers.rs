@@ -78,15 +78,15 @@ fn is_urn_uuid(py_str: &[u8]) -> bool {
 #[expect(clippy::inline_always)]
 #[inline(always)]
 pub fn parse_uuid_hex_str(mut py_str: &[u8], hi: &mut u64, lo: &mut u64) -> c_int {
-    let len = py_str.len();
-
-    if len >= 9 && is_urn_uuid(py_str) {
+    if py_str.len() >= 9 && is_urn_uuid(py_str) {
         py_str = &py_str[9..];
     }
-    if len >= 2 && py_str[0] == b'{' && py_str[len - 1] == b'}' {
-        py_str = &py_str[1..len - 1];
+
+    if py_str.len() >= 2 && py_str[0] == b'{' && py_str[py_str.len() - 1] == b'}' {
+        py_str = &py_str[1..py_str.len() - 1];
     }
-    match len {
+
+    match py_str.len() {
         32 => parse_hex32(py_str, hi, lo),
         36 => parse_dashed(py_str, hi, lo),
         _ => -1,

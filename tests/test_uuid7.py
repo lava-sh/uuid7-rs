@@ -438,10 +438,15 @@ COMPACT = CANON.replace("-", "")
     [
         CANON,
         COMPACT,
+        CANON.upper(),
+        COMPACT.upper(),
         f"urn:uuid:{CANON}",
+        f"urn:uuid:{CANON.upper()}",
+        f"urn:uuid:{{{CANON}}}",
         f"{{{CANON}}}",
         f"{{{COMPACT}}}",
-        f"urn:uuid:{{{CANON}}}",
+        f"{{{CANON.upper()}}}",
+        f"{{{COMPACT.upper()}}}",
     ],
 )
 def test_uuid_form_parse(form: str) -> None:
