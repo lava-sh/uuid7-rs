@@ -58,7 +58,6 @@ fn parse_dashed(py_str: &[u8], hi: &mut u64, lo: &mut u64) -> c_int {
     0
 }
 
-#[expect(clippy::inline_always)]
 #[inline(always)]
 fn is_urn_uuid(py_str: &[u8]) -> bool {
     const URN_UUID: u64 = u64::from_le_bytes(*b"urn:uuid") | 0x2020_2020_2020_2020;
