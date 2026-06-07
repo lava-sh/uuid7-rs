@@ -4,13 +4,15 @@
 
 *Fast UUID v7 generator written in Rust🦅*
 
-</div>
+<a href="https://pypi.org/project/uuid7-rs"><img alt="PyPI Version" src="https://shieldcn.dev/pypi/uuid7-rs.svg?variant=branded&font=geist-mono&size=xs"/></a>
+<a href="https://pypi.org/project/uuid7-rs"><img alt="Monthly Downloads" src="https://shieldcn.dev/pypi/dm/uuid7-rs.svg?variant=branded&font=geist-mono&size=xs"/></a>
+<a href="https://pypi.org/project/uuid7-rs"><img alt="Python Version" src="https://shieldcn.dev/pypi/python/uuid7-rs.svg?variant=branded&font=geist-mono&size=xs"/></a>
 
-[![PyPI License](https://img.shields.io/pypi/l/uuid7-rs.svg?style=flat-square)](https://pypi.org/project/uuid7-rs)
-[![Monthly downloads](https://img.shields.io/pypi/dm/uuid7-rs.svg?style=flat-square)](https://pypi.org/project/uuid7-rs)
-[![Github Repository size](https://img.shields.io/github/repo-size/lava-sh/uuid7-rs?style=flat-square)](https://github.com/lava-sh/uuid7-rs)
-[![Python version](https://img.shields.io/pypi/pyversions/uuid7-rs.svg?style=flat-square)](https://pypi.org/project/uuid7-rs)
-[![Implementation](https://img.shields.io/pypi/implementation/uuid7-rs.svg?style=flat-square)](https://pypi.org/project/uuid7-rs)
+<a href="https://github.com/lava-sh/uuid7-rs/actions?query=branch%3Amain"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/ci/lava-sh/uuid7-rs.svg?variant=outline&font=geist-mono&size=xs&animate=pulse&mode=dark"><img alt="CI" src="https://shieldcn.dev/github/ci/lava-sh/uuid7-rs.svg?variant=outline&font=geist-mono&size=xs&animate=pulse&mode=light"></picture></a>
+<a href="https://github.com/lava-sh/uuid7-rs/commits/main"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/last-commit/lava-sh/uuid7-rs.svg?variant=outline&font=geist-mono&size=xs&mode=dark"><img alt="Last Commit" src="https://shieldcn.dev/github/last-commit/lava-sh/uuid7-rs.svg?variant=outline&font=geist-mono&size=xs&mode=light"></picture></a>
+<a href="https://github.com/lava-sh/uuid7-rs/blob/main/UNLICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/lava-sh/uuid7-rs/license.svg?variant=outline&font=geist-mono&size=xs&mode=dark"><img alt="License" src="https://shieldcn.dev/github/lava-sh/uuid7-rs/license.svg?variant=outline&font=geist-mono&size=xs&mode=light"></picture></a>
+
+</div>
 
 ## Features
 
