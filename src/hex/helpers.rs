@@ -58,19 +58,13 @@ fn parse_dashed(py_str: &[u8], hi: &mut u64, lo: &mut u64) -> c_int {
     0
 }
 
-#[expect(clippy::inline_always)]
 #[inline(always)]
 fn is_urn_uuid(py_str: &[u8]) -> bool {
+    const URN_UUID: u64 = u64::from_le_bytes(*b"urn:uuid") | 0x2020_2020_2020_2020;
+
     let ptr = py_str.as_ptr();
     unsafe {
-        (*ptr.add(0) | 0x20) == b'u'
-            && (*ptr.add(1) | 0x20) == b'r'
-            && (*ptr.add(2) | 0x20) == b'n'
-            && *ptr.add(3) == b':'
-            && (*ptr.add(4) | 0x20) == b'u'
-            && (*ptr.add(5) | 0x20) == b'u'
-            && (*ptr.add(6) | 0x20) == b'i'
-            && (*ptr.add(7) | 0x20) == b'd'
+        (ptr::read_unaligned(ptr.cast::<u64>()) | 0x2020_2020_2020_2020) == URN_UUID
             && *ptr.add(8) == b':'
     }
 }
@@ -78,15 +72,15 @@ fn is_urn_uuid(py_str: &[u8]) -> bool {
 #[expect(clippy::inline_always)]
 #[inline(always)]
 pub fn parse_uuid_hex_str(mut py_str: &[u8], hi: &mut u64, lo: &mut u64) -> c_int {
-    let len = py_str.len();
-
-    if len >= 9 && is_urn_uuid(py_str) {
+    if py_str.len() >= 9 && is_urn_uuid(py_str) {
         py_str = &py_str[9..];
     }
-    if len >= 2 && py_str[0] == b'{' && py_str[len - 1] == b'}' {
-        py_str = &py_str[1..len - 1];
+
+    if py_str.len() >= 2 && py_str[0] == b'{' && py_str[py_str.len() - 1] == b'}' {
+        py_str = &py_str[1..py_str.len() - 1];
     }
-    match len {
+
+    match py_str.len() {
         32 => parse_hex32(py_str, hi, lo),
         36 => parse_dashed(py_str, hi, lo),
         _ => -1,

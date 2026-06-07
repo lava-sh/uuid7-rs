@@ -160,44 +160,20 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
             return -1;
         }
 
-        let nd = long_export.ndigits.cast_unsigned();
-        let d = long_export.digits.cast::<u32>();
-        let (d0, d1, d2, d3, d4) = unsafe {
-            match nd {
-                1 => (u64::from(*d), 0, 0, 0, 0),
-                2 => (u64::from(*d), u64::from(*d.add(1)), 0, 0, 0),
-                3 => (
-                    u64::from(*d),
-                    u64::from(*d.add(1)),
-                    u64::from(*d.add(2)),
-                    0,
-                    0,
-                ),
-                4 => (
-                    u64::from(*d),
-                    u64::from(*d.add(1)),
-                    u64::from(*d.add(2)),
-                    u64::from(*d.add(3)),
-                    0,
-                ),
-                _ => (
-                    u64::from(*d),
-                    u64::from(*d.add(1)),
-                    u64::from(*d.add(2)),
-                    u64::from(*d.add(3)),
-                    u64::from(*d.add(4)),
-                ),
-            }
-        };
+        let ndigits = long_export.ndigits.cast_unsigned();
+        let mut digit = [0_u64; 5];
+        for (k, slot) in digit.iter_mut().enumerate().take(ndigits) {
+            *slot = u64::from(unsafe { *long_export.digits.cast::<u32>().add(k) });
+        }
 
-        if d4 > 0xFF {
+        if digit[4] > 0xFF {
             unsafe { PyLong_FreeExport(addr_of_mut!(long_export)) };
             PyValueError::new_err(INT_RANGE_ERR);
             return -1;
         }
 
-        *lo = d0 | (d1 << 30) | (d2 << 60);
-        *hi = (d2 >> 4) | (d3 << 26) | (d4 << 56);
+        *lo = digit[0] | (digit[1] << 30) | (digit[2] << 60);
+        *hi = (digit[2] >> 4) | (digit[3] << 26) | (digit[4] << 56);
 
         unsafe { PyLong_FreeExport(addr_of_mut!(long_export)) };
         return 0;

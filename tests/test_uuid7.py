@@ -427,3 +427,27 @@ def test_uuid7_reuses_cached_object() -> None:
 
     second = uuid7_rs.uuid7()
     assert id(second) == first_id
+
+
+CANON = "019e83dc-c0f0-7c07-8e71-5f295d4e6fe9"
+COMPACT = CANON.replace("-", "")
+
+
+@pytest.mark.parametrize(
+    "form",
+    [
+        CANON,
+        COMPACT,
+        CANON.upper(),
+        COMPACT.upper(),
+        f"urn:uuid:{CANON}",
+        f"urn:uuid:{CANON.upper()}",
+        f"urn:uuid:{{{CANON}}}",
+        f"{{{CANON}}}",
+        f"{{{COMPACT}}}",
+        f"{{{CANON.upper()}}}",
+        f"{{{COMPACT.upper()}}}",
+    ],
+)
+def test_uuid_form_parse(form: str) -> None:
+    assert uuid7_rs.UUID(form).int == uuid.UUID(form).int

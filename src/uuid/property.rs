@@ -3,15 +3,18 @@ use std::{
     ptr,
 };
 
-use pyo3::ffi::{
-    Py_ssize_t, PyBytes_FromStringAndSize, PyLong_FromUnsignedLong, PyLong_FromUnsignedLongLong,
-    PyObject, PyTuple_New,
+use pyo3::{
+    Bound, IntoPyObject, Python,
+    ffi::{
+        Py_ssize_t, PyBytes_FromStringAndSize, PyLong_FromUnsignedLong,
+        PyLong_FromUnsignedLongLong, PyObject,
+    },
 };
 
 use crate::{
     hex::helpers::{fmt_dashed, fmt_hex32},
     parse::{uuid_to_bytes, uuid_to_bytes_le},
-    python::ffi::{PyTuple_SET_ITEM, uuid_int_from_parts},
+    python::ffi::uuid_int_from_parts,
     uuid::uuid_obj::UUIDObject,
 };
 
@@ -30,19 +33,12 @@ macro_rules! getter {
     };
 }
 
-// https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L370-L387
 getter!(time, UUIDObject::time, u64);
-// https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L394-L396
 getter!(node, UUIDObject::node, u64);
-// https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L350-L352
 getter!(time_low, UUIDObject::time_low);
-// https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L354-L356
 getter!(time_mid, UUIDObject::time_mid);
-// https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L358-L360
 getter!(time_hi_version, UUIDObject::time_hi_version);
-// https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L362-L364
 getter!(clock_seq_hi_variant, UUIDObject::clock_seq_hi_variant);
-// https://github.com/python/cpython/blob/v3.15.0a8/Lib/uuid.py#L366-L368
 getter!(clock_seq_low, UUIDObject::clock_seq_low);
 
 #[inline]
@@ -75,10 +71,10 @@ pub fn with_buf(len: Py_ssize_t, f: impl FnOnce(&mut [u8])) -> *mut PyObject {
 
 pub extern "C" fn bytes_le(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
     let obj = UUIDObject::from_self(self_);
-    let mut bytes = [0_u8; 16];
+    let mut buf = [0_u8; 16];
     let mut reordered = [0_u8; 16];
-    uuid_to_bytes(obj.hi, obj.lo, bytes.as_mut_ptr());
-    uuid_to_bytes_le(&bytes, &mut reordered);
+    uuid_to_bytes(obj.hi, obj.lo, buf.as_mut_ptr());
+    uuid_to_bytes_le(&buf, &mut reordered);
     unsafe { PyBytes_FromStringAndSize(reordered.as_ptr().cast::<c_char>(), 16) }
 }
 
@@ -97,9 +93,9 @@ pub extern "C" fn hex(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
 
 pub extern "C" fn bytes(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
     let obj = UUIDObject::from_self(self_);
-    let mut bytes = [0_u8; 16];
-    uuid_to_bytes(obj.hi, obj.lo, bytes.as_mut_ptr());
-    unsafe { PyBytes_FromStringAndSize(bytes.as_ptr().cast::<c_char>(), 16) }
+    let mut buf = [0_u8; 16];
+    uuid_to_bytes(obj.hi, obj.lo, buf.as_mut_ptr());
+    unsafe { PyBytes_FromStringAndSize(buf.as_ptr().cast::<c_char>(), 16) }
 }
 
 pub extern "C" fn urn(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
@@ -113,42 +109,18 @@ pub extern "C" fn urn(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
 
 pub extern "C" fn fields(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {
     let obj = UUIDObject::from_self(self_);
-    let py_tuple = unsafe { PyTuple_New(6) };
+    let py = unsafe { Python::assume_attached() };
 
-    if py_tuple.is_null() {
-        return ptr::null_mut();
-    }
-
-    unsafe {
-        PyTuple_SET_ITEM(
-            py_tuple,
-            0,
-            PyLong_FromUnsignedLong(obj.time_low() as c_ulong),
-        );
-        PyTuple_SET_ITEM(
-            py_tuple,
-            1,
-            PyLong_FromUnsignedLong(obj.time_mid() as c_ulong),
-        );
-        PyTuple_SET_ITEM(
-            py_tuple,
-            2,
-            PyLong_FromUnsignedLong(obj.time_hi_version() as c_ulong),
-        );
-        PyTuple_SET_ITEM(
-            py_tuple,
-            3,
-            PyLong_FromUnsignedLong(obj.clock_seq_hi_variant() as c_ulong),
-        );
-        PyTuple_SET_ITEM(
-            py_tuple,
-            4,
-            PyLong_FromUnsignedLong(obj.clock_seq_low() as c_ulong),
-        );
-        PyTuple_SET_ITEM(py_tuple, 5, PyLong_FromUnsignedLongLong(obj.node()));
-    }
-
-    py_tuple
+    (
+        obj.time_low(),
+        obj.time_mid(),
+        obj.time_hi_version(),
+        obj.clock_seq_hi_variant(),
+        obj.clock_seq_low(),
+        obj.node(),
+    )
+        .into_pyobject(py)
+        .map_or(ptr::null_mut(), Bound::into_ptr)
 }
 
 pub extern "C" fn get_clock_seq(self_: *mut PyObject, _: *mut c_void) -> *mut PyObject {

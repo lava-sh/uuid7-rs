@@ -28,19 +28,20 @@ pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
 
     let mut ptr: *mut c_void = null_mut();
 
-    let writer = unsafe { PyLongWriter_Create(0, 5, addr_of_mut!(ptr)) };
+    let long_writer = unsafe { PyLongWriter_Create(0, 5, addr_of_mut!(ptr)) };
 
-    if writer.is_null() {
+    if long_writer.is_null() {
         return null_mut();
     }
 
     let digit = ptr.cast::<u32>();
+
     unsafe {
         digit.write((lo & MASK) as u32);
         digit.add(1).write(((lo >> 30) & MASK) as u32);
         digit.add(2).write((((lo >> 60) | (hi << 4)) & MASK) as u32);
         digit.add(3).write(((hi >> 26) & MASK) as u32);
         digit.add(4).write((hi >> 56) as u32);
-        PyLongWriter_Finish(writer)
+        PyLongWriter_Finish(long_writer)
     }
 }

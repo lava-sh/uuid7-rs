@@ -11,10 +11,7 @@ use crate::{
         exceptions::{PyTypeError, PyValueError},
         ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE, uuid_int_from_parts},
     },
-    rng::{
-        build_timestamp_ms, build_uuid7_default, build_uuid7_default_secure, build_uuid7_with_args,
-        build_uuid7_with_args_secure,
-    },
+    rng::{Fast, Secure, build_timestamp_ms, build_uuid7, build_uuid7_with_args},
     uuid::class::uuid_new,
 };
 
@@ -33,7 +30,7 @@ fn uuid7_parts(
 
     if nargs == 0 && nkw == 0 {
         let (mut hi, mut lo) = (0_u64, 0_u64);
-        if build_uuid7_default(&mut hi, &mut lo) != 0 {
+        if build_uuid7::<Fast>(&mut hi, &mut lo) != 0 {
             return None;
         }
         return Some((hi, lo));
@@ -71,26 +68,21 @@ fn uuid7_parts(
         let k = unsafe { PyTuple_GET_ITEM(kwnames, i) };
         let v = unsafe { *args.offset(nargs + i) };
 
-        match () {
-            () if unsafe { PyUnicode_CompareWithASCIIString(k, c"timestamp".as_ptr()) } == 0 => {
-                ts = v;
+        if unsafe { PyUnicode_CompareWithASCIIString(k, c"timestamp".as_ptr()) } == 0 {
+            ts = v;
+        } else if unsafe { PyUnicode_CompareWithASCIIString(k, c"nanos".as_ptr()) } == 0 {
+            nanos = v;
+        } else if unsafe { PyUnicode_CompareWithASCIIString(k, c"mode".as_ptr()) } == 0 {
+            mode = v;
+        } else {
+            unsafe {
+                PyErr_Format(
+                    PyExc_TypeError,
+                    c"uuid7() got an unexpected keyword argument '%U'".as_ptr(),
+                    k,
+                );
             }
-            () if unsafe { PyUnicode_CompareWithASCIIString(k, c"nanos".as_ptr()) } == 0 => {
-                nanos = v;
-            }
-            () if unsafe { PyUnicode_CompareWithASCIIString(k, c"mode".as_ptr()) } == 0 => {
-                mode = v;
-            }
-            () => {
-                unsafe {
-                    PyErr_Format(
-                        PyExc_TypeError,
-                        c"uuid7() got an unexpected keyword argument '%U'".as_ptr(),
-                        k,
-                    );
-                }
-                return None;
-            }
+            return None;
         }
     }
 
@@ -102,22 +94,20 @@ fn uuid7_parts(
             return None;
         }
 
-        match () {
-            () if unsafe { PyUnicode_CompareWithASCIIString(mode, c"fast".as_ptr()) } == 0 => false,
-            () if unsafe { PyUnicode_CompareWithASCIIString(mode, c"secure".as_ptr()) } == 0 => {
-                true
-            }
-            () => {
-                PyValueError::new_err(c"mode must be 'fast' or 'secure'");
-                return None;
-            }
+        if unsafe { PyUnicode_CompareWithASCIIString(mode, c"fast".as_ptr()) } == 0 {
+            false
+        } else if unsafe { PyUnicode_CompareWithASCIIString(mode, c"secure".as_ptr()) } == 0 {
+            true
+        } else {
+            PyValueError::new_err(c"mode must be 'fast' or 'secure'");
+            return None;
         }
     };
 
     if secure && ts == none && nanos == none {
         let (mut hi, mut lo) = (0_u64, 0_u64);
 
-        if build_uuid7_default_secure(&mut hi, &mut lo) != 0 {
+        if build_uuid7::<Secure>(&mut hi, &mut lo) != 0 {
             return None;
         }
         return Some((hi, lo));
@@ -147,7 +137,7 @@ fn uuid7_parts(
     let (mut hi, mut lo) = (0_u64, 0_u64);
 
     let mode = if secure {
-        build_uuid7_with_args_secure(
+        build_uuid7_with_args::<Secure>(
             timestamp_ms,
             has_ts > 0,
             nanos,
@@ -156,7 +146,7 @@ fn uuid7_parts(
             &mut lo,
         )
     } else {
-        build_uuid7_with_args(
+        build_uuid7_with_args::<Fast>(
             timestamp_ms,
             has_ts > 0,
             nanos,

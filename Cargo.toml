@@ -1,6 +1,6 @@
 [package]
 name = "uuid7-rs"
-version = "0.0.8"
+version = "0.0.9"
 edition = "2024"
 build = "build.rs"
 
@@ -19,9 +19,6 @@ git = "https://github.com/PyO3/pyo3"
 rev = "f7f74cfd1133b6d8415f79f34d41587ad1ca8466"
 # remove after pyo3 0.29.0 release
 features = ["generate-import-lib"]
-
-[target."cfg(unix)".dependencies]
-libc = "=0.2.186"
 
 [target."cfg(windows)".dependencies]
 windows-link = "=0.2.1"
@@ -72,3 +69,4 @@ manual_let_else = "allow"
 cast_possible_truncation = "allow"
 missing_const_for_fn = "allow"
 similar_names = "allow"
+cast_ptr_alignment = "allow"
