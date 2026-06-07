@@ -1,5 +1,5 @@
 use std::{
-    ptr,
+    ptr::addr_of_mut,
     sync::atomic::{AtomicU64, Ordering},
 };
 
@@ -18,7 +18,7 @@ const TICKS_PER_MILLISECOND: u64 = 10_000;
 fn system_ms() -> u64 {
     let mut file_time = FILETIME::default();
     unsafe {
-        GetSystemTimePreciseAsFileTime(ptr::addr_of_mut!(file_time));
+        GetSystemTimePreciseAsFileTime(addr_of_mut!(file_time));
     }
 
     let ticks = unsafe { *(&raw const file_time).cast::<u64>() };
@@ -30,7 +30,7 @@ fn system_ms() -> u64 {
 fn now() -> u64 {
     let mut interrupt_time = 0;
     unsafe {
-        QueryInterruptTime(ptr::addr_of_mut!(interrupt_time));
+        QueryInterruptTime(addr_of_mut!(interrupt_time));
     }
     interrupt_time / TICKS_PER_MILLISECOND
 }
