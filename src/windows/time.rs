@@ -21,10 +21,7 @@ fn system_ms() -> u64 {
         GetSystemTimePreciseAsFileTime(ptr::addr_of_mut!(file_time));
     }
 
-    let ticks = unsafe {
-        let ptr = ptr::addr_of!(file_time).cast::<u8>();
-        ptr::read_unaligned(ptr.cast::<u64>())
-    };
+    let ticks = unsafe { *(&raw const file_time).cast::<u64>() };
 
     (ticks - UNIX_EPOCH_TICKS) / TICKS_PER_MILLISECOND
 }
