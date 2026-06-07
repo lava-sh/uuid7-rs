@@ -28,7 +28,7 @@ fn system_ms() -> u64 {
 
 #[inline]
 fn now() -> u64 {
-    let mut interrupt_time = 0_u64;
+    let mut interrupt_time = 0;
     unsafe {
         QueryInterruptTime(addr_of_mut!(interrupt_time));
     }
