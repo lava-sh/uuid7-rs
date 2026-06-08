@@ -20,13 +20,19 @@
 
 ## Installation
 
-Using pip:
+<p>
+  <img src=".assets/python.svg" alt="uv" width="12" height="12">
+  Using <a href="https://github.com/pypa/pip">pip</a>:
+</p>
 
 ```bash
 pip install uuid7-rs
 ```
 
-Using uv:
+<p>
+  <img src=".assets/uv.svg" alt="uv" width="12" height="12">
+  Using <a href="https://github.com/astral-sh/uv">uv</a>:
+</p>
 
 ```bash
 uv pip install uuid7-rs
