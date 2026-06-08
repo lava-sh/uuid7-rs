@@ -43,8 +43,9 @@ uv pip install uuid7-rs
 ```python
 import uuid7_rs
 
-print(uuid7_rs.uuid7())  # 019d1ab2-cfea-71f3-ab07-0bf844ff9149
-print(uuid7_rs.compat.uuid7())  # 019d1ab2-cfea-71f3-ab07-0bf98a94016c
+print(uuid7_rs.uuid7())         # 019ea835-f42a-7dd5-8fc3-9f91aab5a95e 
+# or
+print(uuid7_rs.compat.uuid7())  # 019ea835-f42b-7dbd-a198-1b6d65ef5eb4
 ```
 
 ## Compatibility with Python [uuid.UUID](https://docs.python.org/3/library/uuid.html)
