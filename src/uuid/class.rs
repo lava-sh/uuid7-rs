@@ -211,6 +211,7 @@ static mut METHODS: [PyMethodDef; 3] = [
         ml_flags: METH_O,
         ml_doc: ptr::null(),
     },
+    // A zeroed PyMethodDef to mark the end of the array
     PyMethodDef::zeroed(),
 ];
 
