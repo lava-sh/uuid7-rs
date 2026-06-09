@@ -23,6 +23,7 @@ pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
     const MASK: u64 = (1 << SHIFT) - 1;
 
     if !is_30bit_layout() {
+        std::hint::cold_path();
         return super::py_3_13::uuid_int_from_parts(hi, lo);
     }
 
