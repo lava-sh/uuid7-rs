@@ -1,4 +1,7 @@
-use pyo3::ffi::{Py_ASNATIVEBYTES_UNSIGNED_BUFFER, PyLong_FromUnsignedNativeBytes, PyObject, Py_ASNATIVEBYTES_BIG_ENDIAN};
+use pyo3::ffi::{
+    Py_ASNATIVEBYTES_BIG_ENDIAN, Py_ASNATIVEBYTES_UNSIGNED_BUFFER, PyLong_FromUnsignedNativeBytes,
+    PyObject,
+};
 
 use crate::parse::uuid_to_bytes;
 
