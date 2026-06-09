@@ -9,6 +9,6 @@ pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
 
     unsafe {
         uuid_to_bytes(hi, lo, buf.as_mut_ptr());
-        _PyLong_FromByteArray(buf.as_ptr().cast::<c_uchar>(), 16, 0, 0)
+        _PyLong_FromByteArray(buf.as_ptr().cast(), buf.len(), 0, 0)
     }
 }
