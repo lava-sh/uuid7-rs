@@ -6,7 +6,7 @@ use pyo3::ffi::{
 use crate::parse::uuid_to_bytes;
 
 pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
-    let mut buf = [0_u8; 16];
+    let mut buf = [0_u8; size_of::<u128>()];
 
     unsafe {
         uuid_to_bytes(hi, lo, buf.as_mut_ptr());
