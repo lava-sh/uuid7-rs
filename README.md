@@ -30,7 +30,7 @@ pip install uuid7-rs
 ```
 
 <p>
-  <img src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/uv/default.svg" alt="uv" width="14" height="14">
+  <img src="https://thesvg.org/icons/uv/default.svg" alt="uv" style="height:14px;">
   Using <a href="https://github.com/astral-sh/uv">uv</a>:
 </p>
 
