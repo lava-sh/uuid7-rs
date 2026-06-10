@@ -5,8 +5,8 @@ use std::{
 };
 
 use rand::{
-    rngs::{StdRng as ChaCha12Rng, SysRng}, Rng,
-    TryRng,
+    Rng, TryRng,
+    rngs::{StdRng as ChaCha12Rng, SysRng},
 };
 
 use crate::python::exceptions::{PyOSError, PyValueError};
