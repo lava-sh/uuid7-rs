@@ -21,7 +21,7 @@
 ## Installation
 
 <p>
-  <img src="https://thesvg.org/icons/python/default.svg" alt="Python" width="14" height="14">
+  <img src="https://thesvg.org/icons/python/default.svg" alt="Python" style="height:14px;">
   Using <a href="https://github.com/pypa/pip">pip</a>:
 </p>
 
