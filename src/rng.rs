@@ -6,7 +6,7 @@ use std::{
 
 use rand::{
     Rng, TryRng,
-    rngs::{StdRng, SysRng},
+    rngs::{StdRng as ChaCha12Rng, SysRng},
 };
 
 use crate::python::exceptions::{PyOSError, PyValueError};
@@ -26,7 +26,7 @@ static LAST_MS: AtomicU64 = AtomicU64::new(0);
 static COUNTER42: AtomicU64 = AtomicU64::new(0);
 
 thread_local! {
-    static RNG: RefCell<StdRng> = RefCell::new(rand::make_rng());
+    static RNG: RefCell<ChaCha12Rng> = RefCell::new(rand::make_rng());
 }
 
 #[inline]
