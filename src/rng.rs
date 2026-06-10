@@ -5,8 +5,8 @@ use std::{
 };
 
 use rand::{
-    Rng, TryRng,
-    rngs::{StdRng as ChaCha12Rng, SysRng},
+    rngs::{StdRng as ChaCha12Rng, SysRng}, Rng,
+    TryRng,
 };
 
 use crate::python::exceptions::{PyOSError, PyValueError};
@@ -43,13 +43,6 @@ fn w1_mix(a: u64, b: u64) -> u64 {
     (t >> 64) as u64 ^ t as u64
 }
 
-#[inline]
-fn w1rand() -> u64 {
-    let state = W1_STATE.load(Ordering::Relaxed).wrapping_add(C);
-    W1_STATE.store(state, Ordering::Relaxed);
-    w1_mix(state, state ^ C)
-}
-
 #[cold]
 #[inline(never)]
 fn seed_rng() -> c_int {
@@ -64,10 +57,6 @@ fn seed_rng() -> c_int {
     W1_SEEDED.store(true, Ordering::Relaxed);
     platform_seeded();
     0
-}
-
-pub fn rnd_u64_secure() -> u64 {
-    RNG.with_borrow_mut(Rng::next_u64)
 }
 
 #[inline]
@@ -142,14 +131,18 @@ pub struct Secure;
 impl RandSource for Fast {
     #[inline]
     fn next() -> u64 {
-        w1rand()
+        // w1rand
+        let state = W1_STATE.load(Ordering::Relaxed).wrapping_add(C);
+        W1_STATE.store(state, Ordering::Relaxed);
+        w1_mix(state, state ^ C)
     }
 }
 
 impl RandSource for Secure {
     #[inline]
     fn next() -> u64 {
-        rnd_u64_secure()
+        // ChaCha12
+        RNG.with_borrow_mut(Rng::next_u64)
     }
 }
 
