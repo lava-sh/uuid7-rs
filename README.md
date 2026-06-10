@@ -26,7 +26,7 @@
     alt="Python"
     width="14"
     height="14"
-  >
+  />
   Using <a href="https://github.com/pypa/pip">pip</a>:
 </p>
 
@@ -40,7 +40,7 @@ pip install uuid7-rs
     alt="Python"
     width="14"
     height="14"
-  >
+  />
   Using <a href="https://github.com/astral-sh/uv">uv</a>:
 </p>
 
