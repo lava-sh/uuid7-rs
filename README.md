@@ -21,7 +21,12 @@
 ## Installation
 
 <p>
-  <img src=".assets/python.svg" alt="pip" width="14" height="14">
+  <img
+    src="https://thesvg.org/icons/python/default.svg"
+    alt="Python"
+    width="14"
+    height="14"
+  >
   Using <a href="https://github.com/pypa/pip">pip</a>:
 </p>
 
@@ -30,7 +35,12 @@ pip install uuid7-rs
 ```
 
 <p>
-  <img src=".assets/uv.svg" alt="uv" width="14" height="14">
+  <img
+    src="https://thesvg.org/icons/uv/default.svg"
+    alt="Python"
+    width="14"
+    height="14"
+  >
   Using <a href="https://github.com/astral-sh/uv">uv</a>:
 </p>
 
