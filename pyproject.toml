@@ -9,9 +9,9 @@ module-name = "uuid7_rs._core"
 [project]
 name = "uuid7-rs"
 dynamic = ["version"]
-requires-python = ">=3.10"
+requires-python = ">= 3.10"
 description = "Fast UUID v7 generator written in Rust"
-readme = "README.md"
+readme = { file = "README.md", content-type = "text/markdown" }
 license = "Unlicense"
 license-files = ["UNLICENSE"]
 authors = [
@@ -22,6 +22,7 @@ classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -31,10 +32,14 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Software Development :: Libraries",
+    "Development Status :: 5 - Production/Stable",
 ]
-urls.Source = "https://github.com/lava-sh/uuid7-rs"
-urls.Homepage = "https://github.com/lava-sh/uuid7-rs"
-urls."Bug Tracker" = "https://github.com/lava-sh/uuid7-rs/issues"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/lava-sh/uuid7-rs"
+Repository = "https://github.com/lava-sh/uuid7-rs"
+Issues = "https://github.com/lava-sh/uuid7-rs/issues"
 
 [dependency-groups]
 typos = ["typos == 1.47.2"]
