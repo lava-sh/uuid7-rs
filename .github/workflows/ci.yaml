@@ -121,9 +121,9 @@ jobs:
       - name: "Run tests"
         run: bash .github/scripts/15-bit.sh
 
-  linux:
+  manylinux:
     needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, tools ]
-    uses: ./.github/workflows/linux.yaml
+    uses: ./.github/workflows/manylinux.yaml
 
   musllinux:
     needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, tools ]
@@ -172,7 +172,7 @@ jobs:
     environment: pypi
     needs: [
       build-sdist,
-      linux,
+      manylinux,
       musllinux,
       windows,
       macos,
