@@ -1,4 +1,4 @@
-name: "windows"
+name: "Windows"
 
 on:
   workflow_call:
@@ -6,7 +6,8 @@ on:
 env:
   UV_LINK_MODE: copy
   # A small hack to use anchors as GitHub doesn't allow it to be top level
-  ○_○: &interpreters "3.10 3.11 3.12 3.13 3.14 3.15 pypy3.11"
+  (^_^): &interpreters            "3.10 3.11 3.12 3.13 3.14 3.15 pypy3.11"
+  ○_○: &interpreters_without_pypy "3.10 3.11 3.12 3.13 3.14 3.15"
 
 jobs:
   windows:
@@ -19,25 +20,22 @@ jobs:
           - {
             # AMD64
             runner: windows-latest,
-            target: x64,
-            python-arch: x64,
+            target: x86_64-pc-windows-msvc,
             interpreter: *interpreters,
             maturin-build-args: "--features mimalloc",
           }
           - {
-            # x86
+            # x86 (32-bit)
             runner: windows-latest,
-            target: x86,
-            python-arch: x86,
-            interpreter: "3.10 3.11 3.12 3.13 3.14 3.15",
+            target: i686-pc-windows-msvc,
+            interpreter: *interpreters_without_pypy,
             maturin-build-args: "--features mimalloc",
           }
           - {
             # ARM64
-            runner: windows-11-arm,
-            target: aarch64,
-            python-arch: arm64,
-            interpreter: "3.10 3.11 3.12 3.13 3.14 3.15",
+            runner: windows-11-vs2026-arm,
+            target: aarch64-pc-windows-msvc,
+            interpreter: *interpreters_without_pypy,
             maturin-build-args: "--features mimalloc",
           }
 
@@ -49,7 +47,6 @@ jobs:
       - name: "Install uv"
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
-          # zizmor: ignore[cache-poisoning]
           enable-cache: ${{ github.event_name == 'pull_request' }}
 
       - name: "Build wheels"
@@ -61,7 +58,7 @@ jobs:
             --release
             --out dist
             --interpreter ${{ matrix.platform.interpreter }}
-            ${{ matrix.platform.maturin-build-args }}
+            ${{ matrix.platform.maturin-build-args || '' }}
             --compatibility pypi
 
       - name: "Upload wheels"

@@ -9,48 +9,55 @@ env:
 
 jobs:
   musllinux:
-    name: "ubuntu-latest / ${{ matrix.platform.target }}"
-    runs-on: ubuntu-latest
+    name: "${{ matrix.platform.runner }} / ${{ matrix.platform.target }}"
+    runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
       matrix:
-        # PyPI does not support Rust target `loongarch64-unknown-linux-gnu`
-        # `s390x-unknown-linux-musl` is not available as prebuilt target for cross-compilation
-        # `s390x` is only supported for manylinux (gnu), not musllinux
+        # Rust target `loongarch64-unknown-linux-musl` is not supported by PyPI
+        #
+        # Rust targets `s390x-unknown-linux-musl`, `powerpc64-unknown-linux-musl`
+        # is not available for cross-compilation (only supported for manylinux)
         platform:
           - {
             # AMD64
-            target: x86_64,
+            runner: ubuntu-latest,
+            target: x86_64-unknown-linux-musl,
             interpreter: *interpreters,
             maturin-build-args: "--features mimalloc"
           }
           - {
             # x86 (32-bit)
-            target: x86,
+            runner: ubuntu-latest,
+            target: i686-unknown-linux-musl,
             interpreter: *interpreters,
             maturin-build-args: "--features mimalloc"
           }
           - {
             # ARM64
-            target: aarch64,
+            runner: ubuntu-26.04-arm,
+            target: aarch64-unknown-linux-musl,
             interpreter: *interpreters,
             maturin-build-args: "--features mimalloc"
           }
           - {
             # ARMv7 (32-bit)
-            target: armv7,
+            runner: ubuntu-latest,
+            target: armv7-unknown-linux-musleabihf,
             interpreter: *interpreters,
             maturin-build-args: "--features mimalloc"
           }
           - {
             # PowerPC64 Little Endian
-            target: ppc64le,
+            runner: ubuntu-latest,
+            target: powerpc64le-unknown-linux-musl,
             interpreter: *interpreters,
             maturin-build-args: "--features mimalloc"
           }
           - {
             # RISC-V 64-bit
-            target: riscv64,
+            runner: ubuntu-latest,
+            target: riscv64gc-unknown-linux-musl,
             interpreter: *interpreters,
             maturin-build-args: "--features mimalloc"
           }
@@ -63,7 +70,6 @@ jobs:
       - name: "Install uv"
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
-          # zizmor: ignore[cache-poisoning]
           enable-cache: ${{ github.event_name == 'pull_request' }}
 
       - name: "Build wheels"
@@ -76,7 +82,7 @@ jobs:
             --release
             --out dist
             --interpreter ${{ matrix.platform.interpreter }}
-            ${{ matrix.platform.maturin-build-args }}
+            ${{ matrix.platform.maturin-build-args || '' }}
             --compatibility pypi
 
       - name: "Upload wheels"

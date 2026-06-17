@@ -1,14 +1,10 @@
-name: "macOS"
+name: "Android"
 
 on:
   workflow_call:
 
-env:
-  # A small hack to use anchors as GitHub doesn't allow it to be top level
-  ○_○: &interpreters "3.10 3.11 3.12 3.13 3.14 3.15 pypy3.11"
-
 jobs:
-  macos:
+  android:
     name: "${{ matrix.platform.runner }} / ${{ matrix.platform.target }}"
     runs-on: ${{ matrix.platform.runner }}
     strategy:
@@ -16,25 +12,14 @@ jobs:
       matrix:
         platform:
           - {
-            # Intel Mac
-            runner: macos-26-intel,
-            target: x86_64-apple-darwin,
-            interpreter: *interpreters,
-            maturin-build-args: "--features mimalloc",
+            # ARM64 (64-bit)
+            runner: ubuntu-latest,
+            target: aarch64-linux-android,
           }
           - {
-            # Apple Silicon M1-M4
-            runner: macos-latest,
-            target: aarch64-apple-darwin,
-            interpreter: *interpreters,
-            maturin-build-args: "--features mimalloc",
-          }
-          - {
-            # Universal binary (Intel + Apple Silicon)
-            runner: macos-latest,
-            target: universal2-apple-darwin,
-            interpreter: *interpreters,
-            maturin-build-args: "--features mimalloc",
+            # x86_64 (64-bit)
+            runner: ubuntu-latest,
+            target: x86_64-linux-android,
           }
 
     steps:
@@ -53,14 +38,15 @@ jobs:
           target: ${{ matrix.platform.target }}
           sccache: ${{ github.event_name == 'pull_request' }}
           args: >
-            --release
+            --release 
             --out dist
-            --interpreter ${{ matrix.platform.interpreter }}
-            ${{ matrix.platform.maturin-build-args || '' }}
+            --features android
             --compatibility pypi
+        env:
+          ANDROID_API_LEVEL: "24"
 
       - name: "Upload wheels"
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: wheels-macos-${{ matrix.platform.target }}
+          name: wheels-android-${{ matrix.platform.target }}
           path: dist
