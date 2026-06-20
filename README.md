@@ -46,6 +46,19 @@ pip install uuid7-rs
 uv pip install uuid7-rs
 ```
 
+<p>
+  <img
+    src="https://thesvg.org/icons/poetry/default.svg"
+    alt="Poetry"
+    height="14"
+  />
+  Using <a href="https://github.com/python-poetry/poetry">poetry</a>:
+</p>
+
+```bash
+poetry add uuid7-rs
+```
+
 ## Example
 
 ```python
