@@ -1,5 +1,5 @@
 [build-system]
-requires = ["maturin == 1.14.0"]
+requires = ["maturin == 1.14.1"]
 build-backend = "maturin"
 
 [tool.maturin]
@@ -44,17 +44,17 @@ Issues = "https://github.com/lava-sh/uuid7-rs/issues"
 [dependency-groups]
 typos = ["typos == 1.47.2"]
 zizmor = ["zizmor == 1.25.2"]
-rumdl = ["rumdl == 0.2.18"]
-maturin = ["maturin == 1.14.0"]
-pytest = ["pytest == 9.1.0"]
+rumdl = ["rumdl == 0.2.20"]
+maturin = ["maturin == 1.14.1"]
+pytest = ["pytest == 9.1.1"]
 wasm-test = [
     { include-group = "pytest" },
     "pytest-pyodide == 0.59.2",
     "pytest-httpserver == 1.1.5",
 ]
 ci = [
-    "ty == 0.0.50",
-    "ruff == 0.15.17",
+    "ty == 0.0.51",
+    "ruff == 0.15.18",
     { include-group = "maturin" },
     { include-group = "pytest" },
 ]
@@ -79,4 +79,4 @@ bench = [
 ]
 
 [tool.uv.dependency-groups]
-wasm-test = { requires-python = ">=3.11" }
+wasm-test = { requires-python = ">= 3.13" }

@@ -1,6 +1,6 @@
 [package]
 name = "uuid7-rs"
-version = "0.0.10-alpha.6"
+version = "0.0.10"
 edition = "2024"
 build = "build.rs"
 
