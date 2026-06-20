@@ -1,4 +1,4 @@
-name: CI
+name: "CI"
 
 permissions: { }
 
@@ -23,42 +23,40 @@ concurrency:
 
 jobs:
   cargo-fmt:
-    name: "cargo fmt (nightly)"
+    name: "cargo fmt"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
-      - name: "Install Rust nightly + rustfmt"
-        run: rustup toolchain install nightly --component rustfmt
-
-      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-        if: github.event_name == 'pull_request' && github.run_attempt == 1
+      - uses: dtolnay/rust-toolchain@nightly # zizmor: ignore[unpinned-uses]
         with:
-          lookup-only: false # zizmor: ignore[cache-poisoning]
+          components: rustfmt
 
       - run: cargo fmt-nightly --check
 
   cargo-clippy:
-    name: "cargo clippy (nightly)"
+    name: "cargo clippy"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
-      - name: "Install Rust nightly + clippy"
-        run: rustup toolchain install nightly --component clippy
-
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         if: github.event_name == 'pull_request' && github.run_attempt == 1
         with:
           lookup-only: false # zizmor: ignore[cache-poisoning]
 
+      - uses: dtolnay/rust-toolchain@nightly # zizmor: ignore[unpinned-uses]
+        with:
+          components: clippy
+
       - run: cargo clippy --all-targets
 
   tools:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -72,8 +70,6 @@ jobs:
 
           - name: "rumdl"
             command: rumdl check .
-
-    name: ${{ matrix.name }}
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -96,9 +92,6 @@ jobs:
       - name: "Run ${{ matrix.name }}"
         run: ${{ matrix.command }}
 
-  tests:
-    uses: ./.github/workflows/tests.yaml
-
   tests-15-bit-python:
     name: "tests / ubuntu-latest / python 3.14.4 / 15-bit digits"
     runs-on: ubuntu-latest
@@ -120,6 +113,9 @@ jobs:
 
       - name: "Run tests"
         run: bash .github/scripts/15-bit.sh
+
+  tests:
+    uses: ./.github/workflows/tests.yaml
 
   manylinux:
     needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, tools ]
