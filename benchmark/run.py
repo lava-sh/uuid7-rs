@@ -158,6 +158,7 @@ def run(run_count: int) -> None:
         "uuid6": (uuid6.uuid7, "uuid6"),
         "lastuuid": (lastuuid.uuid7, "lastuuid"),
         "uuid": (uuid.uuid7, "uuid"),
+        "fastuuid7": (uuidv7._uuid7_python, "fastuuid7"),
     }
 
     plot_benchmark(
