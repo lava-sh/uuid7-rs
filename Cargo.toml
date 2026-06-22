@@ -36,7 +36,6 @@ features = [
 [features]
 default = []
 mimalloc = ["dep:mimalloc"]
-android = ["pyo3/abi3-py310"]
 
 [profile.release]
 opt-level = 3
