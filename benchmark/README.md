@@ -86,8 +86,8 @@ python benchmark/run.py
 Linux
 </summary>
 
-<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/ubuntu-uuid7.svg">
-<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/ubuntu-uuid7-compact.svg">
+<img src="https://github.com/lava-sh/benchmarks/blob/main/uuid7-rs/ubuntu-uuid7.svg">
+<img src="https://github.com/lava-sh/benchmarks/blob/main/uuid7-rs/ubuntu-uuid7-compact.svg">
 
 </details>
 
@@ -106,8 +106,8 @@ Linux
 macOS
 </summary>
 
-<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/macos-uuid7.svg">
-<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/macos-uuid7-compact.svg">
+<img src="https://github.com/lava-sh/benchmarks/blob/main/uuid7-rs/macos-uuid7.svg">
+<img src="https://github.com/lava-sh/benchmarks/blob/main/uuid7-rs/macos-uuid7-compact.svg">
 
 </details>
 
@@ -117,7 +117,7 @@ macOS
 Windows
 </summary>
 
-<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/windows-uuid7.svg">
-<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/windows-uuid7-compact.svg">
+<img src="https://github.com/lava-sh/benchmarks/blob/main/uuid7-rs/windows-uuid7.svg">
+<img src="https://github.com/lava-sh/benchmarks/blob/main/uuid7-rs/windows-uuid7-compact.svg">
 
 </details>
