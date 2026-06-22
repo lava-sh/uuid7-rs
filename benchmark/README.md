@@ -2,14 +2,42 @@
 
 ## Create and activate virtual environment
 
-Linux / macOS:
+<p>
+  <span style="white-space: nowrap;">
+    <img
+      src="https://thesvg.org/icons/linux/default.svg"
+      alt="linux"
+      height="14"
+    />
+    Linux /
+    <picture>
+      <source
+        media="(prefers-color-scheme: dark)"
+        srcset="https://thesvg.org/icons/apple/default.svg"
+      />
+      <img
+        src="https://thesvg.org/icons/apple/mono.svg"
+        alt="macos"
+        height="14"
+      />
+    </picture>
+    MacOS:
+  </span>
+</p>
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Windows:
+<p>
+  <img
+    src="https://thesvg.org/icons/windows/default.svg"
+    alt="windows"
+    height="14"
+  />
+  Windows:
+</p>
 
 ```bash
 py -m venv .venv
@@ -18,13 +46,27 @@ py -m venv .venv
 
 ## Install benchmark dependencies
 
-Using pip:
+<p>
+  <img
+    src="https://thesvg.org/icons/python/default.svg"
+    alt="Python"
+    height="14"
+  />
+  Using <a href="https://github.com/pypa/pip">pip</a>:
+</p>
 
 ```bash
 pip install . --group bench
 ```
 
-Using uv:
+<p>
+  <img
+    src="https://thesvg.org/icons/uv/default.svg"
+    alt="uv"
+    height="14"
+  />
+  Using <a href="https://github.com/astral-sh/uv">uv</a>:
+</p>
 
 ```bash
 uv pip install . --group bench
@@ -38,10 +80,44 @@ python benchmark/run.py
 
 ## Results
 
-### `uuid7()` default APIs
+<details>
+<summary>
+<img src="https://thesvg.org/icons/linux/default.svg" height="16" />
+Linux
+</summary>
 
-![UUID v7 default API benchmark](uuid7.svg)
+<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/ubuntu-uuid7.svg">
+<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/ubuntu-uuid7-compact.svg">
 
-### `uuid7()` compact / stdlib-compatible APIs
+</details>
 
-![UUID v7 compact API benchmark](uuid7-compact.svg)
+<details>
+<summary>
+<picture>
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="https://thesvg.org/icons/apple/default.svg"
+  />
+  <img
+    src="https://thesvg.org/icons/apple/mono.svg"
+    height="16"
+  />
+</picture>
+macOS
+</summary>
+
+<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/macos-uuid7.svg">
+<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/macos-uuid7-compact.svg">
+
+</details>
+
+<details>
+<summary>
+<img src="https://thesvg.org/icons/windows/default.svg" height="16" />
+Windows
+</summary>
+
+<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/windows-uuid7.svg">
+<img src="https://github.com/lava-sh/benchmarks/blob/main/yaml-rs/windows-uuid7-compact.svg">
+
+</details>

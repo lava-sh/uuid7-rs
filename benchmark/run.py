@@ -19,6 +19,7 @@ import uuid7 as uuid7gen
 import uuid7_rs
 import uuid_utils
 import uuid_utils.compat as uuid_utils_compat
+import uuidv7
 from uuid_v7.base import uuid7 as uuid_v7_uuid7
 
 N = 500_000
@@ -140,6 +141,7 @@ def plot_benchmark(
 def run(run_count: int) -> None:
     cases = {
         "uuid": (uuid.uuid7, "uuid"),
+        "fastuuid7": (uuidv7.uuid7, "fastuuid7"),
         "uuid7_rs": (uuid7_rs.uuid7, "uuid7_rs"),
         "uuid_utils": (uuid_utils.uuid7, "uuid-utils"),
         "fastuuid": (fastuuid.uuid7, "fastuuid"),
