@@ -66,5 +66,8 @@ jobs:
       - name: "Run ruff"
         run: ruff check
 
+      - name: "Run ty"
+        run: ty check
+
       - name: "Run pytest"
         run: pytest tests/

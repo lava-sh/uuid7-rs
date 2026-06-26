@@ -26,7 +26,7 @@
 </p>
 
 ```bash
-python3 -m venv .venv
+python3 -m venv .venv  # or uv venv .venv --seed
 source .venv/bin/activate
 ```
 
@@ -40,7 +40,7 @@ source .venv/bin/activate
 </p>
 
 ```bash
-py -m venv .venv
+py -m venv .venv  # or uv venv .venv --seed
 .venv\scripts\activate
 ```
 
@@ -80,10 +80,12 @@ python benchmark/run.py
 
 ## Results
 
+Benchmarks are updated daily and stored in [this](https://github.com/lava-sh/benchmarks/tree/main/uuid7-rs) repository.
+
 <details>
 <summary>
 <img src="https://thesvg.org/icons/linux/default.svg" height="16" />
-Linux
+Linux (click me)
 </summary>
 
 <img src="https://github.com/lava-sh/benchmarks/blob/main/uuid7-rs/ubuntu-uuid7.svg">
@@ -103,7 +105,7 @@ Linux
     height="16"
   />
 </picture>
-macOS
+macOS (click me)
 </summary>
 
 <img src="https://github.com/lava-sh/benchmarks/blob/main/uuid7-rs/macos-uuid7.svg">
@@ -114,7 +116,7 @@ macOS
 <details>
 <summary>
 <img src="https://thesvg.org/icons/windows/default.svg" height="16" />
-Windows
+Windows (click me)
 </summary>
 
 <img src="https://github.com/lava-sh/benchmarks/blob/main/uuid7-rs/windows-uuid7.svg">
