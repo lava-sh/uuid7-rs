@@ -25,8 +25,6 @@ from uuid_v7.base import uuid7 as uuid_v7_uuid7
 N = 500_000
 
 FILE_PATH = Path(__file__).resolve().parent
-CPU = cpuinfo.get_cpu_info()["brand_raw"]
-PY_VERSION = f"{platform.python_version()} ({platform.system()} {platform.release()})"
 BenchmarkCase: TypeAlias = tuple[Callable, str]
 
 
@@ -128,12 +126,16 @@ def plot_benchmark(
         .encode(text="label:N")
     )
 
+    cpu_info = cpuinfo.get_cpu_info()
+    cpu_brand = cpu_info.get("brand_raw", "Unknown")
+    py_version = f"{platform.python_version()} ({platform.system()} {platform.release()})"
+
     (chart + text).properties(
         width=800,
         height=600,
         title={
             "text": f"UUID v7 benchmark ({scenario})",
-            "subtitle": f"Python: {PY_VERSION} | CPU: {CPU}",
+            "subtitle": f"Python: {py_version} | CPU: {cpu_brand}",
         },
     ).save(save_path)
 

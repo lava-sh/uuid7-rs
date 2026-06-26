@@ -117,7 +117,7 @@ def test_uuid_constructor(c: Callable[[], uuid7_rs.UUID]) -> None:
             "int is out of range",
         ),
         (
-            lambda: uuid7_rs.UUID(uuid7_rs.uuid7()),  # ty: ignore[invalid-argument-type]
+            lambda: uuid7_rs.UUID(uuid7_rs.uuid7()),  # type: ignore[ty:invalid-argument-type]
             TypeError,
             e("UUID() argument must be a str"),
         ),
@@ -383,12 +383,16 @@ def test_uuid7_timestamp_bounds(timestamp: int, expected: int | None) -> None:
     reason="Does not run on Windows",
 )
 def test_reseed_is_called_when_forking() -> None:
+    # for type checkers
+    if sys.platform == "win32":
+        return
+
     # After `fork()`, the child process must have a reseeded RNG so that
     # UUIDs generated in parent and child do not collide.
     read_end, write_end = os.pipe()
     uuid7_rs.uuid7()
 
-    pid = os.fork()  # ty: ignore[unresolved-attribute]
+    pid = os.fork()
     if pid == 0:
         os.close(read_end)
         next_uuid_child = str(uuid7_rs.uuid7())
