@@ -107,6 +107,7 @@ jobs:
           enable-cache: ${{ github.event_name == 'pull_request' }}
 
       - uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+        # zizmor: ignore[cache-poisoning]
         with:
           path: ${{ runner.temp }}/python3-14-4_15bit
           key: python3-14-4-15bit-${{ runner.os }}-v1
