@@ -22,7 +22,7 @@ features = ["nightly"]
 windows-link = "=0.2.1"
 
 [dependencies.rand]
-version = "=0.10.1"
+version = "=0.10.2"
 default-features = false
 features = [
     "std_rng",
