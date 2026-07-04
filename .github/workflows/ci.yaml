@@ -4,17 +4,12 @@ permissions: { }
 
 on:
   push:
-    branches:
-      - main
+    branches: [
+      "main",
+    ]
     tags:
       - "*"
-    paths-ignore:
-      - "benchmark/*.svg"
-
   pull_request:
-    paths-ignore:
-      - "benchmark/*.svg"
-
   workflow_dispatch:
 
 concurrency:
