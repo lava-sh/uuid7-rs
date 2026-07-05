@@ -1,16 +1,16 @@
 import builtins
 from typing import Any, Final, Literal, NoReturn, TypeAlias
 
-# https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/_typeshed/__init__.pyi#L52-L53
+# https://github.com/python/typeshed/blob/323d5a4/stdlib/_typeshed/__init__.pyi#L52-L53
 Unused: TypeAlias = object
 
 _FieldsType: TypeAlias = tuple[int, int, int, int, int, int]
 
 class _UUID:
-    # https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/uuid.pyi#L18
+    # https://github.com/python/typeshed/blob/323d5a4/stdlib/uuid.pyi#L18
     int: Final[builtins.int]
 
-    # https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/uuid.pyi#L20-L56
+    # https://github.com/python/typeshed/blob/323d5a4/stdlib/uuid.pyi#L20-L56
     def __init__(
         self,
         hex: str | None = None,  # noqa: A002
@@ -45,7 +45,7 @@ class _UUID:
     def time_mid(self) -> builtins.int: ...
     @property
     def urn(self) -> str: ...
-    # https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/uuid.pyi#L61-L68
+    # https://github.com/python/typeshed/blob/323d5a4/stdlib/uuid.pyi#L61-L68
     def __int__(self) -> builtins.int: ...
     def __eq__(self, other: object) -> bool: ...
     def __lt__(self, other: _UUID) -> bool: ...
@@ -58,7 +58,7 @@ class _UUID:
     def __copy__(self) -> _UUID: ...
     def __deepcopy__(self, memo: dict[Any, Any], /) -> _UUID: ...
 
-# https://github.com/python/typeshed/blob/4849b072da0689dcf4cff1f9a9bc4404954fb2f5/stdlib/uuid.pyi#L92-L94
+# https://github.com/python/typeshed/blob/323d5a4/stdlib/uuid.pyi#L92-L94
 _NIL: Final[_UUID]
 _MAX: Final[_UUID]
 
