@@ -4,9 +4,9 @@ line-length = 90
 indent-width = 4
 
 include = [
-    "py-src/**.py",
-    "py-src/**.pyi",
-    "tests/**.py",
+    "py-src/**/*.py",
+    "py-src/**/*.pyi",
+    "tests/*.py",
     "pyproject.toml",
     "README.md",
 ]
