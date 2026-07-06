@@ -72,9 +72,7 @@ pub fn reseed() {
     W1_SEEDED.store(false, Ordering::Relaxed);
     LAST_MS.store(0, Ordering::Relaxed);
     COUNTER42.store(0, Ordering::Relaxed);
-    RNG.with_borrow_mut(|rng| {
-        *rng = rand::make_rng();
-    });
+    RNG.with_borrow_mut(|rng| *rng = rand::make_rng());
 }
 
 #[inline]
@@ -116,22 +114,10 @@ pub fn build_words(ts_ms: u64, rand_a: u16, tail62: u64) -> (u64, u64) {
     const V7_VERSION: u64 = 0x7000;
     const V7_VARIANT: u64 = 0x8000_0000_0000_0000;
 
-    let hi = (ts_ms << 16) | V7_VERSION | u64::from(rand_a);
-    let lo = V7_VARIANT | tail62;
-    (hi, lo)
-}
-
-pub trait Uuid7Mode {
-    fn build_uuid7(high: &mut u64, low: &mut u64) -> c_int;
-
-    fn build_uuid7_with_args(
-        ts_ms: u64,
-        has_ts: bool,
-        nanos: u64,
-        has_nanos: bool,
-        high: &mut u64,
-        low: &mut u64,
-    ) -> c_int;
+    (
+        (ts_ms << 16) | V7_VERSION | u64::from(rand_a),
+        V7_VARIANT | tail62,
+    )
 }
 
 pub struct Fast;
@@ -176,9 +162,9 @@ impl WordRng for ChaCha12Rng {
     }
 }
 
-impl Uuid7Mode for Fast {
+impl Fast {
     #[inline]
-    fn build_uuid7(high: &mut u64, low: &mut u64) -> c_int {
+    pub fn build_uuid7(high: &mut u64, low: &mut u64) -> c_int {
         if ensure_seeded() != 0 {
             return -1;
         }
@@ -188,7 +174,7 @@ impl Uuid7Mode for Fast {
     }
 
     #[inline]
-    fn build_uuid7_with_args(
+    pub fn build_uuid7_with_args(
         ts_ms: u64,
         has_ts: bool,
         nanos: u64,
@@ -205,9 +191,9 @@ impl Uuid7Mode for Fast {
     }
 }
 
-impl Uuid7Mode for Secure {
+impl Secure {
     #[inline]
-    fn build_uuid7(high: &mut u64, low: &mut u64) -> c_int {
+    pub fn build_uuid7(high: &mut u64, low: &mut u64) -> c_int {
         if ensure_seeded() != 0 {
             return -1;
         }
@@ -216,7 +202,7 @@ impl Uuid7Mode for Secure {
     }
 
     #[inline]
-    fn build_uuid7_with_args(
+    pub fn build_uuid7_with_args(
         ts_ms: u64,
         has_ts: bool,
         nanos: u64,
@@ -232,11 +218,6 @@ impl Uuid7Mode for Secure {
             build_uuid7_from_args(ts_ms, has_ts, nanos, has_nanos, high, low, rng)
         })
     }
-}
-
-#[inline]
-pub fn build_uuid7<M: Uuid7Mode>(high: &mut u64, low: &mut u64) -> c_int {
-    M::build_uuid7(high, low)
 }
 
 #[inline]
@@ -262,11 +243,11 @@ fn extract_random_bits_with(
     rand_a: &mut u16,
     tail62: &mut u64,
     rng: &mut impl WordRng,
-) -> c_int {
+) -> bool {
     if has_ts && has_nanos {
         *rand_a = (nanos & 0x0FFF) as u16;
         *tail62 = rng.next_word() & MASK62;
-        return 0;
+        return false;
     }
     if has_ts || has_nanos {
         let c = rng.next_word();
@@ -274,21 +255,9 @@ fn extract_random_bits_with(
         let counter = c & MASK42;
         *rand_a = (counter >> 30) as u16;
         *tail62 = ((counter & MASK30) << 32) | u64::from(r as u32);
-        return 0;
+        return false;
     }
-    1
-}
-
-#[inline]
-pub fn build_uuid7_with_args<M: Uuid7Mode>(
-    ts_ms: u64,
-    has_ts: bool,
-    nanos: u64,
-    has_nanos: bool,
-    high: &mut u64,
-    low: &mut u64,
-) -> c_int {
-    M::build_uuid7_with_args(ts_ms, has_ts, nanos, has_nanos, high, low)
+    true
 }
 
 #[inline]
@@ -302,9 +271,8 @@ fn build_uuid7_from_args(
     rng: &mut impl WordRng,
 ) -> c_int {
     let (mut ra, mut t62) = (0_u16, 0_u64);
-    let state = extract_random_bits_with(has_ts, has_nanos, nanos, &mut ra, &mut t62, rng);
 
-    let (hi, lo) = if state > 0 {
+    let (hi, lo) = if extract_random_bits_with(has_ts, has_nanos, nanos, &mut ra, &mut t62, rng) {
         let mut ms = ts_ms;
         advance_monotonic_with(ms, &mut ms, &mut ra, &mut t62, rng);
         build_words(ms, ra, t62)
