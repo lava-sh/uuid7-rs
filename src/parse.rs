@@ -5,9 +5,10 @@ use std::{
 };
 
 use pyo3::ffi::{
-    Py_DECREF, Py_None, Py_ssize_t, PyBytes_AsStringAndSize, PyErr_Clear, PyErr_Format,
-    PyErr_Occurred, PyExc_TypeError, PyLong_AsUnsignedLongLong, PyLong_Check, PyObject,
-    PyObject_Length, PySequence_Fast, PyUnicode_AsUTF8AndSize, PyUnicode_Check,
+    Py_DECREF, Py_None, Py_SIZE, Py_ssize_t, PyBytes_AS_STRING, PyBytes_AsStringAndSize,
+    PyBytes_Check, PyErr_Clear, PyErr_Format, PyErr_Occurred, PyExc_TypeError,
+    PyLong_AsUnsignedLongLong, PyLong_Check, PyObject, PyObject_Length, PySequence_Fast,
+    PyUnicode_AsUTF8AndSize, PyUnicode_Check,
 };
 
 use crate::{
@@ -17,6 +18,8 @@ use crate::{
         ffi::PySequence_Fast_GET_SIZE,
     },
 };
+
+const UUID_BYTES_LEN: isize = 16;
 
 #[inline]
 pub fn bytes_to_hilo(bytes: *const u8, hi: &mut u64, lo: &mut u64) {
@@ -80,19 +83,38 @@ pub fn parse_uuid(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int {
 }
 
 pub fn parse_uuid_bytes(value: *mut PyObject, le: bool, hi: &mut u64, lo: &mut u64) -> c_int {
+    let err_msg = if le {
+        c"bytes_le is not a 16-char string"
+    } else {
+        c"bytes is not a 16-char string"
+    };
+
+    if unsafe { PyBytes_Check(value) } != 0 {
+        if unsafe { Py_SIZE(value) } != UUID_BYTES_LEN {
+            PyValueError::new_err(err_msg);
+            return -1;
+        }
+
+        let ptr = unsafe { PyBytes_AS_STRING(value) }.cast::<u8>();
+
+        if le {
+            let mut reordered = [0_u8; 16];
+            uuid_to_bytes_le_ptr(ptr, reordered.as_mut_ptr());
+            bytes_to_hilo(reordered.as_ptr(), hi, lo);
+        } else {
+            bytes_to_hilo(ptr, hi, lo);
+        }
+        return 0;
+    }
+
     let len = unsafe { PyObject_Length(value) };
 
     if len < 0 {
         return -1;
     }
 
-    if len != 16 {
-        let msg = if le {
-            c"bytes_le is not a 16-char string"
-        } else {
-            c"bytes is not a 16-char string"
-        };
-        PyValueError::new_err(msg);
+    if len != UUID_BYTES_LEN {
+        PyValueError::new_err(err_msg);
         return -1;
     }
 

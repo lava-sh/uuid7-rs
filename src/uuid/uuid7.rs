@@ -11,7 +11,7 @@ use crate::{
         exceptions::{PyTypeError, PyValueError},
         ffi::{PyTuple_GET_ITEM, PyTuple_GET_SIZE, uuid_int_from_parts},
     },
-    rng::{Fast, Secure, build_timestamp_ms, build_uuid7, build_uuid7_with_args},
+    rng::{Fast, Secure, build_timestamp_ms},
     uuid::class::uuid_new,
 };
 
@@ -30,7 +30,7 @@ fn uuid7_parts(
 
     if nargs == 0 && nkw == 0 {
         let (mut hi, mut lo) = (0_u64, 0_u64);
-        if build_uuid7::<Fast>(&mut hi, &mut lo) != 0 {
+        if Fast::build_uuid7(&mut hi, &mut lo) != 0 {
             return None;
         }
         return Some((hi, lo));
@@ -107,7 +107,7 @@ fn uuid7_parts(
     if secure && ts == none && nanos == none {
         let (mut hi, mut lo) = (0_u64, 0_u64);
 
-        if build_uuid7::<Secure>(&mut hi, &mut lo) != 0 {
+        if Secure::build_uuid7(&mut hi, &mut lo) != 0 {
             return None;
         }
         return Some((hi, lo));
@@ -137,7 +137,7 @@ fn uuid7_parts(
     let (mut hi, mut lo) = (0_u64, 0_u64);
 
     let mode = if secure {
-        build_uuid7_with_args::<Secure>(
+        Secure::build_uuid7_with_args(
             timestamp_ms,
             has_ts > 0,
             nanos,
@@ -146,7 +146,7 @@ fn uuid7_parts(
             &mut lo,
         )
     } else {
-        build_uuid7_with_args::<Fast>(
+        Fast::build_uuid7_with_args(
             timestamp_ms,
             has_ts > 0,
             nanos,

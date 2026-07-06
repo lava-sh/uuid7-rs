@@ -52,4 +52,10 @@ def uuid7(
         A UUIDv7 object.
 
     """
+    if (
+        timestamp is None and
+        nanos is None and
+        mode == "fast"
+    ):
+        return from_int(_uuid7_int())
     return from_int(_uuid7_int(timestamp, nanos, mode))
