@@ -184,7 +184,7 @@ impl Uuid7Mode for Fast {
         }
 
         let mut rng = W1Rng::new();
-        build_uuid7_with_rng(now_ms(), high, low, &mut rng)
+        build_uuid7_monotonic(now_ms(), high, low, &mut rng)
     }
 
     #[inline]
@@ -201,7 +201,7 @@ impl Uuid7Mode for Fast {
         }
 
         let mut rng = W1Rng::new();
-        build_uuid7_with_args_and_rng(ts_ms, has_ts, nanos, has_nanos, high, low, &mut rng)
+        build_uuid7_from_args(ts_ms, has_ts, nanos, has_nanos, high, low, &mut rng)
     }
 }
 
@@ -212,7 +212,7 @@ impl Uuid7Mode for Secure {
             return -1;
         }
 
-        RNG.with_borrow_mut(|rng| build_uuid7_with_rng(now_ms(), high, low, rng))
+        RNG.with_borrow_mut(|rng| build_uuid7_monotonic(now_ms(), high, low, rng))
     }
 
     #[inline]
@@ -229,7 +229,7 @@ impl Uuid7Mode for Secure {
         }
 
         RNG.with_borrow_mut(|rng| {
-            build_uuid7_with_args_and_rng(ts_ms, has_ts, nanos, has_nanos, high, low, rng)
+            build_uuid7_from_args(ts_ms, has_ts, nanos, has_nanos, high, low, rng)
         })
     }
 }
@@ -240,7 +240,7 @@ pub fn build_uuid7<M: Uuid7Mode>(high: &mut u64, low: &mut u64) -> c_int {
 }
 
 #[inline]
-fn build_uuid7_with_rng(
+fn build_uuid7_monotonic(
     observed_ms: u64,
     high: &mut u64,
     low: &mut u64,
@@ -292,7 +292,7 @@ pub fn build_uuid7_with_args<M: Uuid7Mode>(
 }
 
 #[inline]
-fn build_uuid7_with_args_and_rng(
+fn build_uuid7_from_args(
     ts_ms: u64,
     has_ts: bool,
     nanos: u64,
