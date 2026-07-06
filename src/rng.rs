@@ -83,23 +83,23 @@ fn advance_monotonic_with(
     timestamp_ms: &mut u64,
     rand_a: &mut u16,
     tail62: &mut u64,
-    mut rand: impl FnMut() -> u64,
+    rng: &mut impl WordRng,
 ) {
     let mut counter = COUNTER42.load(Ordering::Relaxed);
     let mut current_ms = LAST_MS.load(Ordering::Relaxed);
 
-    let r = rand();
+    let r = rng.next_word();
     let low32 = r as u32;
 
     if observed_ms > current_ms {
         current_ms = observed_ms;
-        counter = rand() & MASK42;
+        counter = rng.next_word() & MASK42;
     } else {
         let increment = 1 + ((r >> 32) & 0x0f);
         counter += increment;
         if counter > MASK42 {
             current_ms += 1;
-            counter = rand() & MASK42;
+            counter = rng.next_word() & MASK42;
         }
     }
 
@@ -121,39 +121,133 @@ pub fn build_words(ts_ms: u64, rand_a: u16, tail62: u64) -> (u64, u64) {
     (hi, lo)
 }
 
-pub trait RandSource {
-    fn next() -> u64;
+pub trait Uuid7Mode {
+    fn build_uuid7(high: &mut u64, low: &mut u64) -> c_int;
+
+    fn build_uuid7_with_args(
+        ts_ms: u64,
+        has_ts: bool,
+        nanos: u64,
+        has_nanos: bool,
+        high: &mut u64,
+        low: &mut u64,
+    ) -> c_int;
 }
 
 pub struct Fast;
 pub struct Secure;
 
-impl RandSource for Fast {
+trait WordRng {
+    fn next_word(&mut self) -> u64;
+}
+
+struct W1Rng {
+    state: u64,
+}
+
+impl W1Rng {
     #[inline]
-    fn next() -> u64 {
-        // w1rand
-        let state = W1_STATE.load(Ordering::Relaxed).wrapping_add(C);
-        W1_STATE.store(state, Ordering::Relaxed);
-        w1_mix(state, state ^ C)
+    fn new() -> Self {
+        Self {
+            state: W1_STATE.load(Ordering::Relaxed),
+        }
     }
 }
 
-impl RandSource for Secure {
+impl Drop for W1Rng {
     #[inline]
-    fn next() -> u64 {
-        // ChaCha12
-        RNG.with_borrow_mut(Rng::next_u64)
+    fn drop(&mut self) {
+        W1_STATE.store(self.state, Ordering::Relaxed);
+    }
+}
+
+impl WordRng for W1Rng {
+    #[inline]
+    fn next_word(&mut self) -> u64 {
+        self.state = self.state.wrapping_add(C);
+        w1_mix(self.state, self.state ^ C)
+    }
+}
+
+impl WordRng for ChaCha12Rng {
+    #[inline]
+    fn next_word(&mut self) -> u64 {
+        Rng::next_u64(self)
+    }
+}
+
+impl Uuid7Mode for Fast {
+    #[inline]
+    fn build_uuid7(high: &mut u64, low: &mut u64) -> c_int {
+        if ensure_seeded() != 0 {
+            return -1;
+        }
+
+        let mut rng = W1Rng::new();
+        build_uuid7_with_rng(now_ms(), high, low, &mut rng)
+    }
+
+    #[inline]
+    fn build_uuid7_with_args(
+        ts_ms: u64,
+        has_ts: bool,
+        nanos: u64,
+        has_nanos: bool,
+        high: &mut u64,
+        low: &mut u64,
+    ) -> c_int {
+        if ensure_seeded() != 0 {
+            return -1;
+        }
+
+        let mut rng = W1Rng::new();
+        build_uuid7_with_args_and_rng(ts_ms, has_ts, nanos, has_nanos, high, low, &mut rng)
+    }
+}
+
+impl Uuid7Mode for Secure {
+    #[inline]
+    fn build_uuid7(high: &mut u64, low: &mut u64) -> c_int {
+        if ensure_seeded() != 0 {
+            return -1;
+        }
+
+        RNG.with_borrow_mut(|rng| build_uuid7_with_rng(now_ms(), high, low, rng))
+    }
+
+    #[inline]
+    fn build_uuid7_with_args(
+        ts_ms: u64,
+        has_ts: bool,
+        nanos: u64,
+        has_nanos: bool,
+        high: &mut u64,
+        low: &mut u64,
+    ) -> c_int {
+        if ensure_seeded() != 0 {
+            return -1;
+        }
+
+        RNG.with_borrow_mut(|rng| {
+            build_uuid7_with_args_and_rng(ts_ms, has_ts, nanos, has_nanos, high, low, rng)
+        })
     }
 }
 
 #[inline]
-pub fn build_uuid7<M: RandSource>(high: &mut u64, low: &mut u64) -> c_int {
-    if ensure_seeded() != 0 {
-        return -1;
-    }
+pub fn build_uuid7<M: Uuid7Mode>(high: &mut u64, low: &mut u64) -> c_int {
+    M::build_uuid7(high, low)
+}
 
+#[inline]
+fn build_uuid7_with_rng(
+    observed_ms: u64,
+    high: &mut u64,
+    low: &mut u64,
+    rng: &mut impl WordRng,
+) -> c_int {
     let (mut ts, mut ra, mut t62) = (0_u64, 0_u16, 0_u64);
-    advance_monotonic_with(now_ms(), &mut ts, &mut ra, &mut t62, M::next);
+    advance_monotonic_with(observed_ms, &mut ts, &mut ra, &mut t62, rng);
     let (hi, lo) = build_words(ts, ra, t62);
     *high = hi;
     *low = lo;
@@ -167,16 +261,16 @@ fn extract_random_bits_with(
     nanos: u64,
     rand_a: &mut u16,
     tail62: &mut u64,
-    mut rand: impl FnMut() -> u64,
+    rng: &mut impl WordRng,
 ) -> c_int {
     if has_ts && has_nanos {
         *rand_a = (nanos & 0x0FFF) as u16;
-        *tail62 = rand() & MASK62;
+        *tail62 = rng.next_word() & MASK62;
         return 0;
     }
     if has_ts || has_nanos {
-        let c = rand();
-        let r = rand();
+        let c = rng.next_word();
+        let r = rng.next_word();
         let counter = c & MASK42;
         *rand_a = (counter >> 30) as u16;
         *tail62 = ((counter & MASK30) << 32) | u64::from(r as u32);
@@ -186,7 +280,7 @@ fn extract_random_bits_with(
 }
 
 #[inline]
-pub fn build_uuid7_with_args<M: RandSource>(
+pub fn build_uuid7_with_args<M: Uuid7Mode>(
     ts_ms: u64,
     has_ts: bool,
     nanos: u64,
@@ -194,15 +288,25 @@ pub fn build_uuid7_with_args<M: RandSource>(
     high: &mut u64,
     low: &mut u64,
 ) -> c_int {
-    if ensure_seeded() != 0 {
-        return -1;
-    }
+    M::build_uuid7_with_args(ts_ms, has_ts, nanos, has_nanos, high, low)
+}
+
+#[inline]
+fn build_uuid7_with_args_and_rng(
+    ts_ms: u64,
+    has_ts: bool,
+    nanos: u64,
+    has_nanos: bool,
+    high: &mut u64,
+    low: &mut u64,
+    rng: &mut impl WordRng,
+) -> c_int {
     let (mut ra, mut t62) = (0_u16, 0_u64);
-    let state = extract_random_bits_with(has_ts, has_nanos, nanos, &mut ra, &mut t62, M::next);
+    let state = extract_random_bits_with(has_ts, has_nanos, nanos, &mut ra, &mut t62, rng);
 
     let (hi, lo) = if state > 0 {
         let mut ms = ts_ms;
-        advance_monotonic_with(ms, &mut ms, &mut ra, &mut t62, M::next);
+        advance_monotonic_with(ms, &mut ms, &mut ra, &mut t62, rng);
         build_words(ms, ra, t62)
     } else {
         build_words(ts_ms, ra, t62)
