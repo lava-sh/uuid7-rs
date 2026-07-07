@@ -1,6 +1,6 @@
 [package]
 name = "uuid7-rs"
-version = "0.0.10"
+version = "0.0.11"
 edition = "2024"
 build = "build.rs"
 
@@ -10,32 +10,56 @@ crate-type = ["cdylib"]
 
 [build-dependencies]
 # pyo3-build-config = "=0.29.1"
-pyo3-build-config = { git = "https://github.com/PyO3/pyo3", rev = "9e6697d1aacdb3fd914dc282494925a24e6a1db2" }
+pyo3-build-config = {
+    git = "https://github.com/PyO3/pyo3",
+    rev = "ff7c5e561db3c6f0326836ff10fe4b381820b444",
+}
 
-[dependencies.pyo3]
-# version = "=0.29.1"
-git = "https://github.com/PyO3/pyo3"
-rev = "9e6697d1aacdb3fd914dc282494925a24e6a1db2"
-features = ["nightly"]
+[dependencies]
+pyo3 = {
+    # version = "=0.29.1"
+    git = "https://github.com/PyO3/pyo3",
+    rev = "ff7c5e561db3c6f0326836ff10fe4b381820b444",
+    features = ["nightly"],
+}
+rand = {
+    version = "=0.10.2",
+    default-features = false,
+    features = [
+        "std_rng",
+        "sys_rng",
+    ],
+}
+# mimalloc v3
+# See: https://github.com/microsoft/mimalloc/tree/dev3?tab=readme-ov-file#branches
+mimalloc = {
+    optional = true,
+    version = "=0.1.52",
+    features = [
+        "override",
+        "local_dynamic_tls",
+    ],
+}
 
-[target."cfg(windows)".dependencies]
+[target.'cfg(target_os = "windows")'.dependencies]
 windows-link = "=0.2.1"
+mimalloc = {
+    optional = true,
+    version = "=0.1.52",
+    features = ["win_direct_tls"],
+}
 
-[dependencies.rand]
-version = "=0.10.2"
-default-features = false
-features = [
-    "std_rng",
-    "sys_rng",
-]
-
-[dependencies.mimalloc]
-optional = true
-version = "=0.1.52"
-features = [
-    "override",
-    "local_dynamic_tls",
-]
+[target.'cfg(target_os = "macos")'.dependencies]
+mimalloc = {
+    optional = true,
+    version = "=0.1.52",
+    # Do not enable mimalloc's "override" feature on macOS.
+    #
+    # It installs process-wide malloc interposition and replaces macOS malloc zone/fork
+    # hooks when the extension is imported via dlopen. That breaks fork-based subprocess
+    # spawning, e.g., asyncio/playwright can fail.
+    features = ["local_dynamic_tls"],
+}
 
 [features]
 default = []
