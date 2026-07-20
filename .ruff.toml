@@ -38,6 +38,7 @@ ignore = [
     "PLR6301", # Check for the presence of unused self parameter in methods definitions
     "PTH207",  # Force `glob` -> `Path.glob` or `Path.rglob`
     "PLW0108", # Lambda may be unnecessary
+    "RUF105",
     ########
     "TC001",   # \
     "TC002",   #  ==> `typing.TYPE_CHECKING` block's
