@@ -68,7 +68,7 @@ mod _core {
                 pyo3::ffi::PyModule_AddFunctions(m, (&raw mut METHODS).cast::<PyMethodDef>());
             },
             PyPy => {
-                use pyo3::ffi::PyModule_AddObjectRef;
+                use pyo3::ffi::{PyCFunction_NewEx, PyModule_AddObjectRef};
 
                 for method in 0..2 {
                     let func = unsafe {
