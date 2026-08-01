@@ -1,7 +1,4 @@
-use std::{
-    ptr::addr_of_mut,
-    sync::atomic::{AtomicU64, Ordering},
-};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::windows::win_api::{FILETIME, GetSystemTimePreciseAsFileTime, QueryInterruptTime};
 
@@ -18,10 +15,13 @@ const TICKS_PER_MILLISECOND: u64 = 10_000;
 fn system_ms() -> u64 {
     let mut file_time = FILETIME::default();
     unsafe {
-        GetSystemTimePreciseAsFileTime(addr_of_mut!(file_time));
+        GetSystemTimePreciseAsFileTime(&raw mut file_time);
     }
 
-    let ticks = unsafe { *(&raw const file_time).cast::<u64>() };
+    let lo = u64::from(file_time.dw_low_date_time);
+    let hi = u64::from(file_time.dw_high_date_time);
+
+    let ticks = lo | (hi << 32);
 
     (ticks - UNIX_EPOCH_TICKS) / TICKS_PER_MILLISECOND
 }
@@ -30,7 +30,7 @@ fn system_ms() -> u64 {
 fn now() -> u64 {
     let mut interrupt_time = 0;
     unsafe {
-        QueryInterruptTime(addr_of_mut!(interrupt_time));
+        QueryInterruptTime(&raw mut interrupt_time);
     }
     interrupt_time / TICKS_PER_MILLISECOND
 }

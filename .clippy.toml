@@ -5,3 +5,6 @@ disallowed-types = [
     { path = "std::os::raw::c_void", replacement = "std::ffi::c_void" },
     { path = "std::os::raw::c_long", replacement = "std::ffi::c_long" },
 ]
+disallowed-macros = [
+    { path = "std::ptr::addr_of_mut", reason = "use `&raw mut` instead" },
+]
