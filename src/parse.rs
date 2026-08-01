@@ -256,9 +256,7 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
 
     for i in 0_usize..6 {
         let item = cfg_select! {
-            not(PyPy) => unsafe {
-                pyo3::ffi::PySequence_Fast_GET_ITEM(seq, i.cast_signed())
-            },
+            not(PyPy) => unsafe { pyo3::ffi::PySequence_Fast_GET_ITEM(seq, i.cast_signed()) },
             PyPy => {
                 ({
                     use pyo3::ffi::PySequence_GetItem;

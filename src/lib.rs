@@ -66,7 +66,7 @@ mod _core {
         cfg_select! {
             not(PyPy) => unsafe {
                 pyo3::ffi::PyModule_AddFunctions(m, (&raw mut METHODS).cast::<PyMethodDef>());
-            }
+            },
             PyPy => {
                 use pyo3::ffi::PyModule_AddObjectRef;
 
