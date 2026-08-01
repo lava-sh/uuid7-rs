@@ -1,8 +1,4 @@
-use std::{
-    ffi::c_void,
-    ptr::{addr_of_mut, null_mut},
-    sync::OnceLock,
-};
+use std::{ffi::c_void, ptr::null_mut, sync::OnceLock};
 
 use pyo3::ffi::{PyLong_GetNativeLayout, PyLongWriter_Create, PyLongWriter_Finish, PyObject};
 
@@ -29,7 +25,7 @@ pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
 
     let mut ptr: *mut c_void = null_mut();
 
-    let long_writer = unsafe { PyLongWriter_Create(0, 5, addr_of_mut!(ptr)) };
+    let long_writer = unsafe { PyLongWriter_Create(0, 5, &raw mut ptr) };
 
     if long_writer.is_null() {
         return null_mut();

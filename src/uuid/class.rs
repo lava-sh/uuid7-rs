@@ -1,7 +1,6 @@
 use std::{
     ffi::{CStr, c_int, c_uint, c_void},
     ptr,
-    ptr::addr_of_mut,
 };
 
 use pyo3::{
@@ -127,9 +126,7 @@ pub extern "C" fn uuid_type_new(
         let mut pos: Py_ssize_t = 0;
         let mut k: *mut PyObject = ptr::null_mut();
         let mut v: *mut PyObject = ptr::null_mut();
-        while unsafe { PyDict_Next(kwargs, addr_of_mut!(pos), addr_of_mut!(k), addr_of_mut!(v)) }
-            != 0
-        {
+        while unsafe { PyDict_Next(kwargs, &raw mut pos, &raw mut k, &raw mut v) } != 0 {
             if unsafe { PyUnicode_CompareWithASCIIString(k, c"bytes".as_ptr()) } == 0 {
                 bytes_obj = v;
             } else if unsafe { PyUnicode_CompareWithASCIIString(k, c"int".as_ptr()) } == 0 {
@@ -280,11 +277,11 @@ pub unsafe fn UUID() -> PyResult<*mut PyObject> {
         },
         PyType_Slot {
             slot: Py_tp_methods,
-            pfunc: addr_of_mut!(METHODS).cast::<c_void>(),
+            pfunc: (&raw mut METHODS).cast::<c_void>(),
         },
         PyType_Slot {
             slot: Py_tp_getset,
-            pfunc: addr_of_mut!(GETSET).cast::<c_void>(),
+            pfunc: (&raw mut GETSET).cast::<c_void>(),
         },
         PyType_Slot {
             slot: Py_nb_int,
@@ -306,7 +303,7 @@ pub unsafe fn UUID() -> PyResult<*mut PyObject> {
         flags: (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_IMMUTABLETYPE) as c_uint,
         slots: slots.as_mut_ptr(),
     };
-    let tp = unsafe { PyType_FromSpec(addr_of_mut!(spec)) };
+    let tp = unsafe { PyType_FromSpec(&raw mut spec) };
     if tp.is_null() {
         return Err(PyErr::fetch(unsafe { Python::assume_attached() }));
     }

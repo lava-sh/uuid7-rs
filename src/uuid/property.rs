@@ -43,29 +43,29 @@ getter!(clock_seq_low, UUIDObject::clock_seq_low);
 
 #[inline]
 pub fn with_buf(len: Py_ssize_t, f: impl FnOnce(&mut [u8])) -> *mut PyObject {
-    #[cfg(not(PyPy))]
-    {
-        use pyo3::ffi::{PyUnicode_1BYTE_DATA, PyUnicode_New};
+    cfg_select! {
+        not(PyPy) => {
+            use pyo3::ffi::{PyUnicode_1BYTE_DATA, PyUnicode_New};
 
-        let py_str = unsafe { PyUnicode_New(len, 127) };
-        if py_str.is_null() {
-            return ptr::null_mut();
+            let py_str = unsafe { PyUnicode_New(len, 127) };
+            if py_str.is_null() {
+                return ptr::null_mut();
+            }
+
+            let buf = unsafe {
+                std::slice::from_raw_parts_mut(PyUnicode_1BYTE_DATA(py_str), len.cast_unsigned())
+            };
+
+            f(buf);
+            py_str
         }
+        PyPy => {
+            use pyo3::ffi::PyUnicode_FromStringAndSize;
 
-        let buf = unsafe {
-            std::slice::from_raw_parts_mut(PyUnicode_1BYTE_DATA(py_str), len.cast_unsigned())
-        };
-
-        f(buf);
-        py_str
-    }
-    #[cfg(PyPy)]
-    {
-        use pyo3::ffi::PyUnicode_FromStringAndSize;
-
-        let mut buf = vec![0_u8; len.cast_unsigned()];
-        f(&mut buf);
-        unsafe { PyUnicode_FromStringAndSize(buf.as_ptr().cast::<c_char>(), len) }
+            let mut buf = vec![0_u8; len.cast_unsigned()];
+            f(&mut buf);
+            unsafe { PyUnicode_FromStringAndSize(buf.as_ptr().cast::<c_char>(), len) }
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 use std::{
     ffi::{CStr, c_char, c_int},
-    ptr::{addr_of_mut, copy_nonoverlapping, null_mut, read_unaligned, write_unaligned},
+    ptr::{copy_nonoverlapping, null_mut, read_unaligned, write_unaligned},
     slice::from_raw_parts,
 };
 
@@ -68,7 +68,7 @@ pub fn parse_uuid(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int {
         return -1;
     }
     let mut size: Py_ssize_t = 0;
-    let text = unsafe { PyUnicode_AsUTF8AndSize(value, addr_of_mut!(size)) };
+    let text = unsafe { PyUnicode_AsUTF8AndSize(value, &raw mut size) };
 
     if text.is_null() {
         return -1;
@@ -121,7 +121,7 @@ pub fn parse_uuid_bytes(value: *mut PyObject, le: bool, hi: &mut u64, lo: &mut u
     let mut buf: *mut c_char = null_mut();
     let mut len: Py_ssize_t = 0;
 
-    if unsafe { PyBytes_AsStringAndSize(value, addr_of_mut!(buf), addr_of_mut!(len)) } != 0 {
+    if unsafe { PyBytes_AsStringAndSize(value, &raw mut buf, &raw mut len) } != 0 {
         unsafe { PyErr_Clear() };
         let msg = if le {
             c"bytes_le is not a 16-char bytes object"
@@ -154,13 +154,11 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
 
     #[cfg(all(Py_3_14, not(PyPy)))]
     if crate::python::ffi::is_30bit_layout() {
-        use std::ptr::addr_of_mut;
-
         use pyo3::ffi::{PyLong_Export, PyLong_FreeExport, PyLongExport};
 
         let mut long_export: PyLongExport = unsafe { std::mem::zeroed() };
 
-        if unsafe { PyLong_Export(value, addr_of_mut!(long_export)) } < 0 {
+        if unsafe { PyLong_Export(value, &raw mut long_export) } < 0 {
             unsafe { PyErr_Clear() };
             PyValueError::new_err(INT_RANGE_ERR);
             return -1;
@@ -177,7 +175,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         }
 
         if long_export.negative != 0 || long_export.ndigits > 5 {
-            unsafe { PyLong_FreeExport(addr_of_mut!(long_export)) };
+            unsafe { PyLong_FreeExport(&raw mut long_export) };
             PyValueError::new_err(INT_RANGE_ERR);
             return -1;
         }
@@ -189,7 +187,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         }
 
         if digit[4] > 0xFF {
-            unsafe { PyLong_FreeExport(addr_of_mut!(long_export)) };
+            unsafe { PyLong_FreeExport(&raw mut long_export) };
             PyValueError::new_err(INT_RANGE_ERR);
             return -1;
         }
@@ -197,50 +195,38 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         *lo = digit[0] | (digit[1] << 30) | (digit[2] << 60);
         *hi = (digit[2] >> 4) | (digit[3] << 26) | (digit[4] << 56);
 
-        unsafe { PyLong_FreeExport(addr_of_mut!(long_export)) };
+        unsafe { PyLong_FreeExport(&raw mut long_export) };
         return 0;
     }
 
     let mut bytes = [0_u8; 16];
-    let rc = {
-        #[cfg(Py_3_13)]
-        unsafe {
-            use std::ffi::c_void;
-
-            use crate::python::ffi::PyLong_AsNativeBytes;
-
-            PyLong_AsNativeBytes(
+    let rc = cfg_select! {
+        Py_3_13 => unsafe {
+            crate::python::ffi::PyLong_AsNativeBytes(
                 value,
-                bytes.as_mut_ptr().cast::<c_void>(),
+                bytes.as_mut_ptr().cast::<std::ffi::c_void>(),
                 16,
                 pyo3::ffi::Py_ASNATIVEBYTES_BIG_ENDIAN
                     | pyo3::ffi::Py_ASNATIVEBYTES_UNSIGNED_BUFFER
                     | pyo3::ffi::Py_ASNATIVEBYTES_REJECT_NEGATIVE,
             )
-        }
-
-        #[cfg(not(Py_3_13))]
-        unsafe {
-            use std::ffi::c_uchar;
-
-            use pyo3::ffi::PyLongObject;
-
-            use crate::python::ffi::PyLong_AsNativeBytes;
-
-            PyLong_AsNativeBytes(
-                value.cast::<PyLongObject>(),
-                bytes.as_mut_ptr().cast::<c_uchar>(),
+        },
+        not(Py_3_13) => unsafe {
+            crate::python::ffi::PyLong_AsNativeBytes(
+                value.cast::<pyo3::ffi::PyLongObject>(),
+                bytes.as_mut_ptr().cast::<std::ffi::c_uchar>(),
                 16,
                 0,
                 0,
             )
-        }
+        },
     };
 
-    #[cfg(Py_3_13)]
-    let out_of_range = !(0..=16).contains(&rc);
-    #[cfg(not(Py_3_13))]
-    let out_of_range = rc < 0;
+    let out_of_range = cfg_select! {
+        Py_3_13 => !(0..=16).contains(&rc),
+        not(Py_3_13) => rc < 0,
+    };
+
     if out_of_range {
         unsafe { PyErr_Clear() };
         PyValueError::new_err(INT_RANGE_ERR);
@@ -268,7 +254,7 @@ pub fn parse_uuid_fields(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_
     }
     let mut parts = [0_u64; 6];
 
-    for i in 0usize..6 {
+    for i in 0_usize..6 {
         let item = {
             #[cfg(not(PyPy))]
             unsafe {

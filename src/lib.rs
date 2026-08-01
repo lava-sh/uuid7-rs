@@ -16,7 +16,7 @@ static GLOBAL_ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[pyo3::pymodule(name = "_core")]
 mod _core {
-    use std::{ptr, ptr::addr_of_mut};
+    use std::ptr;
 
     use pyo3::{
         Bound, PyErr, PyResult,
@@ -63,38 +63,37 @@ mod _core {
 
         let m = module.as_ptr();
 
-        #[cfg(not(PyPy))]
-        unsafe {
-            pyo3::ffi::PyModule_AddFunctions(m, addr_of_mut!(METHODS).cast::<PyMethodDef>());
-        }
+        cfg_select! {
+            not(PyPy) => unsafe {
+                pyo3::ffi::PyModule_AddFunctions(m, (&raw mut METHODS).cast::<PyMethodDef>());
+            },
+            PyPy => {
+                use pyo3::ffi::{PyCFunction_NewEx, PyModule_AddObjectRef};
 
-        #[cfg(PyPy)]
-        {
-            use pyo3::ffi::{PyCFunction_NewEx, PyModule_AddObjectRef};
+                for method in 0..2 {
+                    let func = unsafe {
+                        PyCFunction_NewEx(
+                            &raw mut METHODS[method],
+                            ptr::null_mut(),
+                            ptr::null_mut(),
+                        )
+                    };
+                    if func.is_null() {
+                        return Err(PyErr::fetch(module.py()));
+                    }
 
-            for method in 0..2 {
-                let func = unsafe {
-                    PyCFunction_NewEx(
-                        addr_of_mut!(METHODS[method]),
-                        ptr::null_mut(),
-                        ptr::null_mut(),
-                    )
-                };
-                if func.is_null() {
-                    return Err(PyErr::fetch(module.py()));
-                }
+                    if unsafe { PyModule_AddObjectRef(m, METHODS[method].ml_name, func) } >= 0 {
+                        unsafe {
+                            Py_DECREF(func);
+                        }
+                        continue;
+                    }
 
-                if unsafe { PyModule_AddObjectRef(m, METHODS[method].ml_name, func) } >= 0 {
                     unsafe {
                         Py_DECREF(func);
                     }
-                    continue;
+                    return Err(PyErr::fetch(module.py()));
                 }
-
-                unsafe {
-                    Py_DECREF(func);
-                }
-                return Err(PyErr::fetch(module.py()));
             }
         }
 
