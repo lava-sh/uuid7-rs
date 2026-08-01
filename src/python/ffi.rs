@@ -10,8 +10,7 @@ cfg_select! {
 cfg_select! {
     PyPy => {
         pub use pyo3::ffi::{
-            PySequence_Size as PySequence_Fast_GET_SIZE,
-            PyTuple_GetItem as PyTuple_GET_ITEM,
+            PySequence_Size as PySequence_Fast_GET_SIZE, PyTuple_GetItem as PyTuple_GET_ITEM,
             PyTuple_Size as PyTuple_GET_SIZE,
         };
     }

@@ -201,34 +201,30 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
 
     let mut bytes = [0_u8; 16];
     let rc = cfg_select! {
-        Py_3_13 => {
-            unsafe {
-                crate::python::ffi::PyLong_AsNativeBytes(
-                    value,
-                    bytes.as_mut_ptr().cast::<std::ffi::c_void>(),
-                    16,
-                    pyo3::ffi::Py_ASNATIVEBYTES_BIG_ENDIAN
-                        | pyo3::ffi::Py_ASNATIVEBYTES_UNSIGNED_BUFFER
-                        | pyo3::ffi::Py_ASNATIVEBYTES_REJECT_NEGATIVE,
-                )
-            }
-        }
-        not(Py_3_13) => {
-            unsafe {
-                crate::python::ffi::PyLong_AsNativeBytes(
-                    value.cast::<pyo3::ffi::PyLongObject>(),
-                    bytes.as_mut_ptr().cast::<std::ffi::c_uchar>(),
-                    16,
-                    0,
-                    0,
-                )
-            }
-        }
+        Py_3_13 => unsafe {
+            crate::python::ffi::PyLong_AsNativeBytes(
+                value,
+                bytes.as_mut_ptr().cast::<std::ffi::c_void>(),
+                16,
+                pyo3::ffi::Py_ASNATIVEBYTES_BIG_ENDIAN
+                    | pyo3::ffi::Py_ASNATIVEBYTES_UNSIGNED_BUFFER
+                    | pyo3::ffi::Py_ASNATIVEBYTES_REJECT_NEGATIVE,
+            )
+        },
+        not(Py_3_13) => unsafe {
+            crate::python::ffi::PyLong_AsNativeBytes(
+                value.cast::<pyo3::ffi::PyLongObject>(),
+                bytes.as_mut_ptr().cast::<std::ffi::c_uchar>(),
+                16,
+                0,
+                0,
+            )
+        },
     };
 
     let out_of_range = cfg_select! {
-        Py_3_13 => { !(0..=16).contains(&rc) }
-        not(Py_3_13) => { rc < 0 }
+        Py_3_13 => !(0..=16).contains(&rc),
+        not(Py_3_13) => rc < 0,
     };
 
     if out_of_range {
