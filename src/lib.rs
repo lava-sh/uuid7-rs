@@ -64,10 +64,8 @@ mod _core {
         let m = module.as_ptr();
 
         cfg_select! {
-            not(PyPy) => {
-                unsafe {
-                    pyo3::ffi::PyModule_AddFunctions(m, (&raw mut METHODS).cast::<PyMethodDef>());
-                }
+            not(PyPy) => unsafe {
+                pyo3::ffi::PyModule_AddFunctions(m, (&raw mut METHODS).cast::<PyMethodDef>());
             }
             PyPy => {
                 use pyo3::ffi::PyModule_AddObjectRef;
