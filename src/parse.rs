@@ -215,7 +215,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         }
         not(Py_3_13) => {
             unsafe {
-                crate::python::ffi::PyLong_AsNativeBytes;(
+                crate::python::ffi::PyLong_AsNativeBytes(
                     value.cast::<pyo3::ffi::PyLongObject>(),
                     bytes.as_mut_ptr().cast::<std::ffi::c_uchar>(),
                     16,
