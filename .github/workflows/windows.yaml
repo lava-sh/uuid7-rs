@@ -57,7 +57,7 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           sccache: *is_pull_request
-          args: >
+          args: >-
             --release
             --out dist
             --interpreter ${{ matrix.platform.interpreter }}
