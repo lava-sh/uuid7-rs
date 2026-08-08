@@ -9,7 +9,7 @@ module-name = "uuid7_rs._core"
 [project]
 name = "uuid7-rs"
 dynamic = ["version"]
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 description = "Fast UUID v7 generator written in Rust"
 readme = { file = "README.md", content-type = "text/markdown" }
 license = "Unlicense"
@@ -56,8 +56,8 @@ wasm-test = [
     "pytest-httpserver == 1.1.5",
 ]
 ci = [
-    "ty == 0.0.67",
-    "ruff == 0.16.1",
+    "ty == 0.0.69",
+    "ruff == 0.16.2",
     { include-group = "maturin" },
     { include-group = "pytest" },
 ]

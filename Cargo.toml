@@ -1,6 +1,6 @@
 [package]
 name = "uuid7-rs"
-version = "0.0.11"
+version = "0.1.0"
 edition = "2024"
 build = "build.rs"
 
@@ -25,31 +25,33 @@ rand = {
     ],
 }
 # mimalloc v3
-[target.'cfg(not(any(target_os = "macos", target_os = "windows")))'.dependencies.mimalloc]
-optional = true
-version = "=0.1.52"
-features = [
-    "override",
-    "local_dynamic_tls",
-]
+[target.'cfg(not(any(target_os = "macos", target_os = "windows")))'.dependencies]
+mimalloc = {
+    optional = true,
+    version = "=0.1.52",
+    features = [
+        "override",
+        "local_dynamic_tls",
+    ],
+}
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-link = "=0.2.1"
 mimalloc = {
     optional = true,
     version = "=0.1.52",
-    features = ["win_direct_tls"],
+    features = [],
 }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 mimalloc = {
     optional = true,
     version = "=0.1.52",
-    # Do not enable mimalloc's "override" feature on macOS.
+    # See: https://github.com/lava-sh/toml-rs/issues/229
     #
-    # It installs process-wide malloc interposition and replaces macOS malloc zone/fork
-    # hooks when the extension is imported via dlopen. That breaks fork-based subprocess
-    # spawning, e.g., asyncio/playwright can fail.
+    # mimalloc "override" feature installs process-wide malloc interposition and
+    # replaces macOS malloc zone/fork hooks when the extension is imported via dlopen.
+    # That breaks fork-based subprocess spawning, e.g., asyncio/playwright can fail.
     features = ["local_dynamic_tls"],
 }
 
