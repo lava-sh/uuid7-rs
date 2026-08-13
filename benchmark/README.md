@@ -1,6 +1,6 @@
 # To run the benchmarks
 
-## Create and activate virtual environment
+## Create and activate a virtual environment
 
 <p>
   <span style="white-space: nowrap;">

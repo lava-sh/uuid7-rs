@@ -4,13 +4,18 @@ include = [
     "README.md",
     "benchmark/README.md",
 ]
-
-disable = [
-    "MD033",
-    "MD036",
-    "MD041",
+exclude = [
+    ".git/",
+    ".github/",
 ]
+disable = []
 
 [MD013]
 line-length = 100
 code-blocks = false
+
+[MD033]
+allowed-elements = [
+    "no-markdown-equivalent",
+    "img", "p", "a",
+]
