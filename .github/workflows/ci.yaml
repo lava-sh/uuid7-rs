@@ -7,14 +7,19 @@ on:
     branches: [
       "main",
     ]
-    tags:
-      - "*"
+    tags: [
+      "*",
+    ]
   pull_request:
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
+
+env:
+  FORCE_COLOR: "1"
+  CARGO_TERM_COLOR: always
 
 jobs:
   cargo-fmt:
@@ -88,6 +93,8 @@ jobs:
         run: ${{ matrix.command }}
 
   tests-15-bit-python:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-tests') }}
+
     name: "tests / ubuntu-latest / python 3.14.4 / 15-bit digits"
     runs-on: ubuntu-latest
     steps:
@@ -111,25 +118,37 @@ jobs:
         run: bash .github/scripts/15-bit.sh
 
   tests:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-tests') }}
+
     uses: ./.github/workflows/tests.yaml
 
   manylinux:
+    if: ${{ always() && !failure() && !cancelled() }}
+
     needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, tools ]
     uses: ./.github/workflows/manylinux.yaml
 
   musllinux:
+    if: ${{ always() && !failure() && !cancelled() }}
+
     needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, tools ]
     uses: ./.github/workflows/musllinux.yaml
 
   windows:
+    if: ${{ always() && !failure() && !cancelled() }}
+
     needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, tools ]
     uses: ./.github/workflows/windows.yaml
 
   macos:
+    if: ${{ always() && !failure() && !cancelled() }}
+
     needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, tools ]
     uses: ./.github/workflows/macos.yaml
 
   wasm:
+    if: ${{ always() && !failure() && !cancelled() }}
+
     needs: [ tests, tests-15-bit-python, cargo-fmt, cargo-clippy, tools ]
     uses: ./.github/workflows/wasm.yaml
 
@@ -154,6 +173,8 @@ jobs:
           path: dist
 
   release-pypi:
+    if: ${{ always() && !failure() && !cancelled() }}
+
     name: "Publish to PyPI"
     runs-on: ubuntu-latest
     needs: [
@@ -192,7 +213,8 @@ jobs:
         run: uv publish --trusted-publishing=always 'wheels-*/*'
 
   release-github:
-    if: github.ref_type == 'tag'
+    if: ${{ github.ref_type == 'tag' && always() && !failure() && !cancelled() }}
+
     name: "Publish to GitHub Release"
     runs-on: ubuntu-latest
     needs: [
