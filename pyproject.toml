@@ -76,7 +76,7 @@ bench = [
     "fastuuid == 0.14.0",
     "fastuuid7 == 0.3.0",
     # # # # # # # # # #
-    "polars[plot] == 1.42.1",
+    "polars[plot] == 1.43.2",
     "py-cpuinfo2 == 10.1.1",
     "vl-convert-python == 1.9.0.post1",
 ]
