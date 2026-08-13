@@ -33,7 +33,7 @@ install:
         pip install $wheel.FullName --force-reinstall
     }
 
-[doc("Bump deps & gitHub actions")]
+[doc("Bump Python dependency-groups")]
 [script("pwsh.exe", "-NoLogo", "-NoProfile", "-Command")]
 [windows]
 bump-dependency-groups:
