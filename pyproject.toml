@@ -56,8 +56,8 @@ wasm-test = [
     "pytest-httpserver == 1.1.5",
 ]
 ci = [
-    "ty == 0.0.71",
-    "ruff == 0.16.2",
+    "ty == 0.0.72",
+    "ruff == 0.16.3",
     { include-group = "maturin" },
     { include-group = "pytest" },
 ]
