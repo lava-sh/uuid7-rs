@@ -176,7 +176,7 @@ rumdl check
 
 ## Running tests
 
-We use [pytest]([https://github.com/wntrblm/nox](https://github.com/pytest-dev/pytest)) for tests. To run it, do:
+We use [pytest](https://github.com/pytest-dev/pytest) for tests. To run it, do:
 
 ```console
 pytest
