@@ -18,7 +18,7 @@ _Fast UUID v7 generator written in Rust🦅_
 
 ## Features
 
-* Very fast UUID v7 generator (see [benchmarks](https://github.com/lava-sh/uuid7-rs/tree/main/benchmark))
+* High-performance UUID v7 generator (see [benchmarks](https://github.com/lava-sh/uuid7-rs/tree/main/benchmark))
 
 ## Installation
 
@@ -73,7 +73,7 @@ print(uuid7_rs.compat.uuid7())  # 019ea835-f42b-7dbd-a198-1b6d65ef5eb4
 
 ## Compatibility with Python [uuid.UUID](https://docs.python.org/3/library/uuid.html)
 
-In some cases, for example if you are using `Django`, you might
+In some cases, for example, if you are using `Django`, you might
 need [uuid.UUID](https://docs.python.org/3/library/uuid.html) instances to be returned
 from the standard-library `uuid`, not a custom `UUID` class.
 
