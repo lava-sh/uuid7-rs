@@ -1,4 +1,4 @@
-use core::time::{SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[inline]
 pub fn now_ms() -> u64 {
