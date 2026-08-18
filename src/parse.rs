@@ -1,4 +1,4 @@
-use std::{
+use core::{
     ffi::{CStr, c_char, c_int},
     ptr::{copy_nonoverlapping, null_mut, read_unaligned, write_unaligned},
     slice::from_raw_parts,
@@ -156,7 +156,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
     if crate::python::ffi::is_30bit_layout() {
         use pyo3::ffi::{PyLong_Export, PyLong_FreeExport, PyLongExport};
 
-        let mut long_export: PyLongExport = unsafe { std::mem::zeroed() };
+        let mut long_export: PyLongExport = unsafe { core::mem::zeroed() };
 
         if unsafe { PyLong_Export(value, &raw mut long_export) } < 0 {
             unsafe { PyErr_Clear() };
@@ -204,7 +204,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         Py_3_13 => unsafe {
             crate::python::ffi::PyLong_AsNativeBytes(
                 value,
-                bytes.as_mut_ptr().cast::<std::ffi::c_void>(),
+                bytes.as_mut_ptr().cast::<core::ffi::c_void>(),
                 16,
                 pyo3::ffi::Py_ASNATIVEBYTES_BIG_ENDIAN
                     | pyo3::ffi::Py_ASNATIVEBYTES_UNSIGNED_BUFFER
@@ -214,7 +214,7 @@ pub fn parse_uuid_int(value: *mut PyObject, hi: &mut u64, lo: &mut u64) -> c_int
         not(Py_3_13) => unsafe {
             crate::python::ffi::PyLong_AsNativeBytes(
                 value.cast::<pyo3::ffi::PyLongObject>(),
-                bytes.as_mut_ptr().cast::<std::ffi::c_uchar>(),
+                bytes.as_mut_ptr().cast::<core::ffi::c_uchar>(),
                 16,
                 0,
                 0,

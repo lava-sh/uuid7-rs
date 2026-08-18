@@ -1,4 +1,4 @@
-use std::{ffi::c_int, ptr};
+use core::{ffi::c_int, ptr};
 
 use pyo3::ffi::{
     Py_EQ, Py_False, Py_GE, Py_GT, Py_INCREF, Py_LE, Py_LT, Py_NE, Py_NewRef, Py_NotImplemented,

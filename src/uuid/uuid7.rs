@@ -1,4 +1,4 @@
-use std::ptr;
+use core::ptr;
 
 use pyo3::ffi::{
     Py_None, Py_ssize_t, PyErr_Format, PyExc_TypeError, PyObject, PyUnicode_Check,
@@ -129,9 +129,8 @@ fn uuid7_parts(
         return None;
     }
 
-    let timestamp_ms = match build_timestamp_ms(ts_s, has_ts > 0, nanos, has_nanos > 0) {
-        Ok(v) => v,
-        Err(()) => return None,
+    let Ok(timestamp_ms) = build_timestamp_ms(ts_s, has_ts > 0, nanos, has_nanos > 0) else {
+        return None;
     };
 
     let (mut hi, mut lo) = (0_u64, 0_u64);
