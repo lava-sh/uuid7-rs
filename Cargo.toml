@@ -80,8 +80,11 @@ suspicious = { level = "deny", priority = -1 }
 allow_attributes = "deny"
 disallowed_types = "deny"
 
+std_instead_of_core = "deny"
+std_instead_of_alloc = "deny"
+alloc_instead_of_core = "deny"
+
 too_many_lines = "allow"
-manual_let_else = "allow"
 cast_possible_truncation = "allow"
 missing_const_for_fn = "allow"
 similar_names = "allow"

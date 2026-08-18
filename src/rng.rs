@@ -1,4 +1,4 @@
-use std::{
+use core::{
     cell::RefCell,
     ffi::c_int,
     sync::atomic::{AtomicBool, AtomicU64, Ordering},

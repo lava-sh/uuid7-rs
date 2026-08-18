@@ -1,4 +1,5 @@
-use std::{ffi::c_void, ptr::null_mut, sync::OnceLock};
+use core::{ffi::c_void, ptr::null_mut};
+use std::sync::OnceLock;
 
 use pyo3::ffi::{PyLong_GetNativeLayout, PyLongWriter_Create, PyLongWriter_Finish, PyObject};
 
@@ -19,7 +20,7 @@ pub fn uuid_int_from_parts(hi: u64, lo: u64) -> *mut PyObject {
     const MASK: u64 = (1 << SHIFT) - 1;
 
     if !is_30bit_layout() {
-        std::hint::cold_path();
+        core::hint::cold_path();
         return super::py_3_13::uuid_int_from_parts(hi, lo);
     }
 

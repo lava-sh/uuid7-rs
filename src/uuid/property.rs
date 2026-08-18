@@ -1,4 +1,4 @@
-use std::{
+use core::{
     ffi::{c_char, c_ulong, c_void},
     ptr,
 };
@@ -53,7 +53,7 @@ pub fn with_buf(len: Py_ssize_t, f: impl FnOnce(&mut [u8])) -> *mut PyObject {
             }
 
             let buf = unsafe {
-                std::slice::from_raw_parts_mut(PyUnicode_1BYTE_DATA(py_str), len.cast_unsigned())
+                core::slice::from_raw_parts_mut(PyUnicode_1BYTE_DATA(py_str), len.cast_unsigned())
             };
 
             f(buf);

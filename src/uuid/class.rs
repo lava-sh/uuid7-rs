@@ -1,4 +1,4 @@
-use std::{
+use core::{
     ffi::{CStr, c_int, c_uint, c_void},
     ptr,
 };

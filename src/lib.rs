@@ -16,7 +16,7 @@ static GLOBAL_ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[pyo3::pymodule(name = "_core")]
 mod _core {
-    use std::ptr;
+    use core::ptr;
 
     use pyo3::{
         Bound, PyErr, PyResult,

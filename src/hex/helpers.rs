@@ -1,4 +1,4 @@
-use std::{ffi::c_int, ptr};
+use core::{ffi::c_int, ptr};
 
 use crate::hex::table::{HEX_PAIRS, HEX_WORDS};
 

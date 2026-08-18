@@ -6,7 +6,7 @@ macro_rules! exception {
 
         impl $name {
             #[inline]
-            pub fn new_err(msg: &std::ffi::CStr) {
+            pub fn new_err(msg: &core::ffi::CStr) {
                 unsafe {
                     pyo3::ffi::PyErr_SetString($exc, msg.as_ptr());
                 }
