@@ -1,9 +1,15 @@
 set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-Command"]
 
 alias i := install
-alias b := bump-dependency-groups
+alias b := bump-python-dependencies
 
-WHEEL_DIR := "wheel/"
+WHEEL_DIR := "wheels/"
+
+[unix]
+_activate_venv := "source .venv/bin/activate"
+
+[windows]
+_activate_venv := '.\.venv\Scripts\Activate.ps1'
 
 [private]
 @default:
@@ -19,24 +25,22 @@ install:
         Remove-Item {{ WHEEL_DIR }} -Recurse -Force
     }
 
-    .\.venv\Scripts\Activate.ps1
+    {{ _activate_venv }}
 
     maturin build --out {{ WHEEL_DIR }} --release --features mimalloc
 
-    $wheel = Get-ChildItem {{ WHEEL_DIR }}/*.whl | Select-Object -First 1
-
     if (Get-Command uv -ErrorAction SilentlyContinue) {
         Write-Host "uv found, using uv"
-        uv pip install $wheel.FullName --force-reinstall
+        uv pip install toml-rs --no-index --find-links {{ WHEEL_DIR }} --force-reinstall
     } else {
         Write-Host "uv not found, using pip"
-        pip install $wheel.FullName --force-reinstall
+        pip install toml-rs --no-index --find-links {{ WHEEL_DIR }} --force-reinstall
     }
 
-[doc("Bump Python dependency-groups")]
+[doc("Bump Python dependencies")]
 [script("pwsh.exe", "-NoLogo", "-NoProfile", "-Command")]
 [windows]
-bump-dependency-groups:
+bump-python-dependencies:
     $ErrorActionPreference = "Stop"
 
     $branch = git branch --show-current
@@ -64,5 +68,5 @@ bump-dependency-groups:
     if ($LASTEXITCODE -eq 0) {
         Write-Host "skipping commit"
     } else {
-        git commit -m "bump python dependency-groups"
+        git commit -m "bump Python dependencies"
     }
