@@ -116,4 +116,4 @@ def _uuid7_int(
 
 def _reseed_rng() -> None: ...
 
-_VERSION: Final[str]
+__version__: Final[str]
