@@ -6,8 +6,7 @@ indent-width = 4
 output-prefer-rule-codes = true
 
 include = [
-    "py-src/**/*.py",
-    "py-src/**/*.pyi",
+    "py-src/**/*.{py,pyi}",
     "tests/*.py",
     "pyproject.toml",
     "README.md",
@@ -49,17 +48,16 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"py-src/uuid7_rs/__init__.py" = ["RUF067"]
-"py-src/uuid7_rs/compat/__init__.py" = ["RUF067"]
+"py-src/uuid7_rs/{compat/__init__.py,__init__.py}" = ["RUF067"]
 "py-src/uuid7_rs/_core.pyi" = ["PYI021"]
 # tests
-"tests/**.py" = [
+"tests/*.py" = [
     "S101",    # Check `assert`
     "PLR2004", # Check magic values
     "FURB171", # Check for membership tests against single-item containers
 ]
 # benchmark
-"benchmark/**.py" = [
+"benchmark/*.py" = [
     "INP001", # Check for packages that are missing an `__init__.py` file
 ]
 
