@@ -68,13 +68,13 @@ dev = [
     { include-group = "zizmor" },
 ]
 bench = [
-    "uuid_utils == 0.17.0",
-    "uuid_v7 == 1.0.0",
-    "UUIDv7gen == 1.0.3",
-    "uuid6 == 2025.0.1",
-    "lastuuid == 0.5.0",
-    "fastuuid == 0.14.0",
-    "fastuuid7 == 0.3.0",
+    "uuid_utils",
+    "uuid_v7",
+    "UUIDv7gen",
+    "uuid6",
+    "lastuuid",
+    "fastuuid",
+    "fastuuid7",
     # # # # # # # # # #
     "polars[plot] == 1.44.1",
     "py-cpuinfo2 == 10.1.1",
