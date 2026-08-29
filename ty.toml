@@ -4,8 +4,7 @@ python-version = "3.11"
 
 [src]
 include = [
-    "py-src/**/*.py",
-    "py-src/**/*.pyi",
+    "py-src/**/*.{py,pyi}",
     "tests/*.py",
 ]
 exclude = [
