@@ -31,7 +31,6 @@ mod _core {
         uuid7::{uuid7, uuid7_int},
     };
 
-    #[allow(clippy::used_underscore_items, clippy::allow_attributes)]
     #[pyfunction]
     fn _reseed_rng() {
         rng::reseed();
