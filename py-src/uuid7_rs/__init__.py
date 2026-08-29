@@ -14,7 +14,7 @@ from ._core import (
     _MAX as MAX,
     _NIL as NIL,
     _UUID as UUID,
-    _VERSION as __version__,  # noqa: N811
+    __version__,
     _reseed_rng,
     _uuid7 as uuid7,
 )

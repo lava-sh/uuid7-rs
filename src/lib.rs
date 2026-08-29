@@ -31,13 +31,15 @@ mod _core {
         uuid7::{uuid7, uuid7_int},
     };
 
+    #[allow(clippy::used_underscore_items, clippy::allow_attributes)]
     #[pyfunction]
     fn _reseed_rng() {
         rng::reseed();
     }
 
     #[pymodule_export]
-    const _VERSION: &str = env!("CARGO_PKG_VERSION");
+    #[allow(non_upper_case_globals, clippy::allow_attributes)]
+    const __version__: &str = env!("CARGO_PKG_VERSION");
 
     #[pymodule_init]
     fn init(module: &Bound<'_, PyModule>) -> PyResult<()> {
