@@ -36,7 +36,7 @@ mimalloc = {
 }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows-link = "=0.2.1"
+windows-link = "=0.100.0"
 mimalloc = {
     optional = true,
     version = "=0.1.52",
