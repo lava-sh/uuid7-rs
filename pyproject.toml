@@ -42,9 +42,9 @@ Repository = "https://github.com/lava-sh/uuid7-rs"
 Issues = "https://github.com/lava-sh/uuid7-rs/issues"
 
 [dependency-groups]
-typos = ["typos == 1.50.0"]
-zizmor = ["zizmor == 1.29.0"]
-rumdl = ["rumdl == 0.2.62"]
+typos = ["typos == 1.50.1"]
+zizmor = ["zizmor == 1.30.0"]
+rumdl = ["rumdl == 0.2.64"]
 maturin = [
     "maturin == 1.15.0 ; sys_platform != 'linux'",
     "maturin[patchelf] == 1.15.0 ; sys_platform == 'linux'",
@@ -56,8 +56,8 @@ wasm-test = [
     "pytest-httpserver == 1.1.5",
 ]
 ci = [
-    "ty == 0.0.75",
-    "ruff == 0.16.5",
+    "ty == 0.0.78",
+    "ruff == 0.16.6",
     { include-group = "maturin" },
     { include-group = "pytest" },
 ]
