@@ -42,9 +42,9 @@ Repository = "https://github.com/lava-sh/uuid7-rs"
 Issues = "https://github.com/lava-sh/uuid7-rs/issues"
 
 [dependency-groups]
-typos = ["typos == 1.50.1"]
-zizmor = ["zizmor == 1.30.0"]
-rumdl = ["rumdl == 0.2.64"]
+typos = ["typos == 1.50.2"]
+zizmor = ["zizmor == 1.30.1"]
+rumdl = ["rumdl == 0.2.74"]
 maturin = [
     "maturin == 1.15.0 ; sys_platform != 'linux'",
     "maturin[patchelf] == 1.15.0 ; sys_platform == 'linux'",
@@ -56,8 +56,8 @@ wasm-test = [
     "pytest-httpserver == 1.1.5",
 ]
 ci = [
-    "ty == 0.0.78",
-    "ruff == 0.16.6",
+    "ty == 0.0.82",
+    "ruff == 0.16.8",
     { include-group = "maturin" },
     { include-group = "pytest" },
 ]
@@ -76,7 +76,7 @@ bench = [
     "fastuuid",
     "fastuuid7",
     # # # # # # # # # #
-    "polars[plot] == 1.44.1",
+    "polars[plot] == 1.44.2",
     "py-cpuinfo2 == 10.1.1",
     "vl-convert-python == 1.9.0.post1",
 ]
