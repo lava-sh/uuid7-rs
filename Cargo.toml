@@ -9,7 +9,7 @@ name = "_core"
 crate-type = ["cdylib"]
 
 [build-dependencies]
-pyo3-build-config = "=0.29.2"
+pyo3-build-config = "=0.29.3"
 
 [dependencies]
 pyo3 = {
