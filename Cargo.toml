@@ -17,7 +17,7 @@ pyo3 = {
     features = ["nightly"],
 }
 rand = {
-    version = "=0.10.2",
+    version = "=0.10.3",
     default-features = false,
     features = [
         "std_rng",
