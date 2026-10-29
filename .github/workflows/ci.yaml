@@ -30,6 +30,8 @@ env:
     ${{ !contains(github.event.pull_request.labels.*.name, 'skip: tests') }}
   __skip_lints: &skip_lints >-
     ${{ !contains(github.event.pull_request.labels.*.name, 'skip: lints') }}
+  __is_pull_request: &is_pull_request >-
+    ${{ github.event_name == 'pull_request' }}
 
 jobs:
   cargo-fmt:
@@ -57,7 +59,7 @@ jobs:
           persist-credentials: false
 
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
-        if: github.event_name == 'pull_request' && github.run_attempt == 1
+        if: *is_pull_request && github.run_attempt == 1
         with:
           lookup-only: false # zizmor: ignore[cache-poisoning]
 
@@ -97,7 +99,7 @@ jobs:
         uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
         with:
           # zizmor: ignore[cache-poisoning]
-          enable-cache: ${{ github.event_name == 'pull_request' }}
+          enable-cache: *is_pull_request
 
       - name: "Install ${{ matrix.name }}"
         run: uv pip install --group ${{ matrix.name }} --system
