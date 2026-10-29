@@ -22,14 +22,14 @@ jobs:
         platform:
           - {
             # AMD64
-            runner: windows-latest,
+            runner: windows-2025,
             target: x86_64-pc-windows-msvc,
             interpreter: *interpreters,
             maturin-build-args: "--features mimalloc",
           }
           - {
             # x86 (32-bit)
-            runner: windows-latest,
+            runner: windows-2025,
             target: i686-pc-windows-msvc,
             interpreter: *interpreters_without_pypy,
             maturin-build-args: "--features mimalloc",
