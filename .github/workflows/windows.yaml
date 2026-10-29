@@ -47,11 +47,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: "Install uv"
-        uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
-        with:
-          enable-cache: *is_pull_request
-
       - uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
         if: *is_pull_request
         with:
@@ -61,6 +56,11 @@ jobs:
           cache-executables: true
           cache-dir: ${{ runner.temp }}/kache
           cache-key-prefix: kache-${{ matrix.platform.target }}
+
+      - name: "Install uv"
+        uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
+        with:
+          enable-cache: *is_pull_request
 
       - name: "Build wheels"
         uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0

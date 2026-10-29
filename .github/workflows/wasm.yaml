@@ -5,8 +5,6 @@ on:
 
 env:
   __is_pull_request: &is_pull_request ${{ github.event_name == 'pull_request' }}
-  #
-  ○_○: &rust-nightly "nightly-2026-08-13"
 
 jobs:
   wasm:
@@ -19,11 +17,10 @@ jobs:
         platform:
           - python-version: "3.13"
             # pyodide:
-            # 0.28.0a3 - 0.29.4 (emscripten 4.0.9)
-            pyodide-version: "0.29.4"
+            # 0.28.0a3 - 0.29.5 (emscripten 4.0.9)
+            pyodide-version: "0.29.5"
             pyemscripten-version: "2025_0"
             emsdk-version: "4.0.9"
-            rust-toolchain: *rust-nightly
             rustflags: >-
               -C link-arg=-sSIDE_MODULE=2
               -C link-arg=-sWASM_BIGINT
@@ -33,11 +30,10 @@ jobs:
 
           - python-version: "3.14"
             # pyodide:
-            # 314.0.0a1 - 314.0.4 (emscripten 5.0.3)
-            pyodide-version: "314.0.4"
+            # 314.0.0a1 - 314.0.7 (emscripten 5.0.3)
+            pyodide-version: "314.0.7"
             pyemscripten-version: "2026_0"
             emsdk-version: "5.0.3"
-            rust-toolchain: *rust-nightly
             rustflags: >-
               -C link-arg=-sSIDE_MODULE=2
               -C link-arg=-sWASM_BIGINT
@@ -60,11 +56,6 @@ jobs:
         with:
           version: ${{ matrix.platform.emsdk-version }}
 
-      - name: "Install uv"
-        uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
-        with:
-          enable-cache: *is_pull_request
-
       - uses: kunobi-ninja/kache-action@ad7317540dcdd71c904f7a60a87b620a0c0e67ed # v1
         if: *is_pull_request
         with:
@@ -75,6 +66,11 @@ jobs:
           cache-dir: ${{ runner.temp }}/kache
           cache-key-prefix: kache-${{ matrix.platform.emsdk-version }}
 
+      - name: "Install uv"
+        uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
+        with:
+          enable-cache: *is_pull_request
+
       - name: "Build WASM wheel"
         uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         env:
@@ -82,7 +78,6 @@ jobs:
           MATURIN_PYEMSCRIPTEN_PLATFORM_VERSION: ${{ matrix.platform.pyemscripten-version }}
         with:
           container: off
-          rust-toolchain: ${{ matrix.platform.rust-toolchain }}
           args: >-
             --out dist
             --release
