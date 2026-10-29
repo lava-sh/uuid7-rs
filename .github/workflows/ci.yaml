@@ -7,9 +7,7 @@ on:
     branches: [
       "main",
     ]
-    tags: [
-      "*",
-    ]
+    tags: ["*"]
   pull_request:
     types: [
       "synchronize",
@@ -213,8 +211,8 @@ jobs:
     # if the python wheel build jobs are skipped, there are no artifacts to validate
     if: >-
       ${{
-        always() && !failure() && !cancelled() &&
-        !contains(github.event.pull_request.labels.*.name, 'skip: wheels build')
+        !contains(github.event.pull_request.labels.*.name, 'skip: wheels build') &&
+        always() && !failure() && !cancelled()
       }}
 
     name: "Publish to PyPI"
@@ -255,7 +253,11 @@ jobs:
         run: uv publish --trusted-publishing=always 'wheels-*/*'
 
   release-github:
-    if: ${{ github.ref_type == 'tag' && always() && !failure() && !cancelled() }}
+    if: >-
+      ${{
+        github.ref_type == 'tag' &&
+        always() && !failure() && !cancelled()
+      }}
 
     name: "Publish to GitHub Release"
     runs-on: ubuntu-26.04
